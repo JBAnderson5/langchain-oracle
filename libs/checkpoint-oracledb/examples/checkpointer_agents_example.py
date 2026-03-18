@@ -4,7 +4,6 @@ import json
 import os
 import sys
 import operator
-import uuid
 from typing import Annotated, TypedDict, cast
 
 PACKAGE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -12,10 +11,9 @@ if PACKAGE_ROOT not in sys.path:
     sys.path.insert(0, PACKAGE_ROOT)
 
 from langchain_core.runnables import RunnableConfig
-from langchain_core.tools import tool
 from langgraph.graph import END, StateGraph
 
-from langchain_oci import ChatOCIGenAI, create_oci_agent
+from langchain_oci import create_oci_agent
 
 from langgraph.checkpoint.oracledb import OracleDBSaver
 

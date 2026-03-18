@@ -56,3 +56,12 @@ def stop_oracle_docker() -> None:
     """Stop the dockerized Oracle instance used for local examples."""
     lib_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     subprocess.run(["make", "-C", lib_root, "stop-oracle"], check=True)
+
+
+def enable_oracle_vectors() -> oracledb.Connection:
+    """Enables Vectors onthe dockerized Oracle instance"""
+    lib_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    subprocess.run(["make", "-C", lib_root, "enable-oracle-vectors"], check=True)
+
+    conn = connect_to_oracle(password="OraclePwd_2025")
+    return conn

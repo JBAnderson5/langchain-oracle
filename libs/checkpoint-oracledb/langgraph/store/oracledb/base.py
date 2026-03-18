@@ -11,8 +11,6 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Any, Literal, cast
 
-from langgraph.store.base import NotProvided
-
 import oracledb
 from langchain_community.vectorstores.utils import DistanceStrategy
 from langchain_core.embeddings import Embeddings
@@ -22,9 +20,6 @@ from langgraph.store.base import (
     IndexConfig,
     Item,
     ListNamespacesOp,
-    MatchCondition,
-    NamespacePath,
-    NOT_PROVIDED,
     Op,
     PutOp,
     Result,
@@ -128,7 +123,6 @@ class OracleVSStore(BaseStore):
         index: OracleIndexConfig | None = None,
         ttl: TTLConfig | None = None,
         vector_store_params: dict[str, Any] | None = None,
-        auto_create_vector_index: bool = False, # TODO: set this up better and by default
         vector_index_params: dict[str, Any] | None = None, # {"idx_name": "toolbox_vs_hnsw", "idx_type": "HNSW"}
     ) -> None:
         super().__init__()
@@ -144,13 +138,13 @@ class OracleVSStore(BaseStore):
         self.index_config = index
         if self.index_config:
             self.embeddings, self.index_config = _ensure_index_config(self.index_config)
+            self.enable_vector = True
         else:
             self.embeddings = None
+            self.enable_vector = False
         self.ttl_config = ttl
         self.vector_store_params = vector_store_params or {}
-        self.auto_create_vector_index = auto_create_vector_index
         self.vector_index_params = vector_index_params
-        self._vector_index_ready = False
         self.vector_store: OracleVS | None = None
         self._ttl_sweeper_thread: threading.Thread | None = None
         self._ttl_stop_event = threading.Event()
@@ -182,10 +176,20 @@ class OracleVSStore(BaseStore):
             mutate_on_duplicate=True,
             **self.vector_store_params,
         )
-        if self.auto_create_vector_index and not self._vector_index_ready:
+        if self.enable_vector and not self._vector_index_exists():
             create_index(self.conn, self.vector_store, params=self.vector_index_params)
-            self._vector_index_ready = True
         return self.vector_store
+
+    def _vector_index_exists(self) -> bool:
+        table_name = self.vector_table_name
+        query = """
+            SELECT 1
+            FROM all_ind_columns
+            WHERE table_name = :table_name
+        """
+        with self._cursor() as cursor:
+            cursor.execute(query, {"table_name": table_name})
+            return cursor.fetchone() is not None
 
     def setup(self) -> None:
         """Create required tables and migration tracking tables."""
@@ -830,145 +834,6 @@ class OracleVSStore(BaseStore):
 
             namespace_list = namespace_list[op.offset : op.offset + op.limit]
             results[idx] = [_decode_ns_text(ns) for ns in namespace_list]
-
-    def list_namespaces(
-        self,
-        *,
-        prefix: NamespacePath | None = None,
-        suffix: NamespacePath | None = None,
-        max_depth: int | None = None,
-        limit: int = 100,
-        offset: int = 0,
-    ) -> list[tuple[str, ...]]:
-        match_conditions = []
-        if prefix:
-            match_conditions.append(MatchCondition(match_type="prefix", path=prefix))
-        if suffix:
-            match_conditions.append(MatchCondition(match_type="suffix", path=suffix))
-        op = ListNamespacesOp(
-            match_conditions=tuple(match_conditions),
-            max_depth=max_depth,
-            limit=limit,
-            offset=offset,
-        )
-        return cast(list[tuple[str, ...]], self.batch([op])[0])
-
-    # TODO: move to async version
-    async def alist_namespaces(
-        self,
-        *,
-        prefix: NamespacePath | None = None,
-        suffix: NamespacePath | None = None,
-        max_depth: int | None = None,
-        limit: int = 100,
-        offset: int = 0,
-    ) -> list[tuple[str, ...]]:
-        match_conditions = []
-        if prefix:
-            match_conditions.append(MatchCondition(match_type="prefix", path=prefix))
-        if suffix:
-            match_conditions.append(MatchCondition(match_type="suffix", path=suffix))
-        op = ListNamespacesOp(
-            match_conditions=tuple(match_conditions),
-            max_depth=max_depth,
-            limit=limit,
-            offset=offset,
-        )
-        return cast(list[tuple[str, ...]], (await self.abatch([op]))[0])
-
-    def put(
-        self,
-        namespace: tuple[str, ...],
-        key: str,
-        value: dict[str, Any],
-        index: Literal[False] | list[str] | None = None,
-        *,
-        ttl: float | None | NotProvided = NOT_PROVIDED,
-    ) -> None:
-        _validate_namespace(namespace)
-        if ttl not in (NOT_PROVIDED, None) and not self.supports_ttl:
-            raise NotImplementedError(
-                f"TTL is not supported by {self.__class__.__name__}. "
-                f"Use a store implementation that supports TTL or set ttl=None."
-            )
-        self.batch(
-            [
-                PutOp(
-                    namespace,
-                    str(key),
-                    value,
-                    index=index,
-                    ttl=_ensure_ttl(self.ttl_config, ttl),
-                )
-            ]
-        )
-
-    # TODO: move to async version
-    async def aput(
-        self,
-        namespace: tuple[str, ...],
-        key: str,
-        value: dict[str, Any],
-        index: Literal[False] | list[str] | None = None,
-        *,
-        ttl: float | None | NotProvided = NOT_PROVIDED,
-    ) -> None:
-        _validate_namespace(namespace)
-        if ttl not in (NOT_PROVIDED, None) and not self.supports_ttl:
-            raise NotImplementedError(
-                f"TTL is not supported by {self.__class__.__name__}. "
-                f"Use a store implementation that supports TTL or set ttl=None."
-            )
-        await self.abatch(
-            [
-                PutOp(
-                    namespace,
-                    str(key),
-                    value,
-                    index=index,
-                    ttl=_ensure_ttl(self.ttl_config, ttl),
-                )
-            ]
-        )
-
-
-class InvalidNamespaceError(ValueError):
-    """Provided namespace is invalid."""
-
-
-def _validate_namespace(namespace: tuple[str, ...]) -> None:
-    if not namespace:
-        raise InvalidNamespaceError("Namespace cannot be empty.")
-    for label in namespace:
-        if not isinstance(label, str):
-            raise InvalidNamespaceError(
-                f"Invalid namespace label '{label}' found in {namespace}. Namespace labels"
-                f" must be strings, but got {type(label).__name__}."
-            )
-        if "." in label:
-            raise InvalidNamespaceError(
-                f"Invalid namespace label '{label}' found in {namespace}. Namespace labels cannot contain periods ('.')."
-            )
-        if not label:
-            raise InvalidNamespaceError(
-                f"Namespace labels cannot be empty strings. Got {label} in {namespace}"
-            )
-    if namespace[0] == "langgraph":
-        raise InvalidNamespaceError(
-            f'Root label for namespace cannot be "langgraph". Got: {namespace}'
-        )
-
-
-def _ensure_ttl(
-    ttl_config: TTLConfig | None,
-    ttl: float | None | NotProvided = NOT_PROVIDED,
-) -> float | None:
-    if ttl is NOT_PROVIDED:
-        if ttl_config:
-            return ttl_config.get("default_ttl")
-        return None
-    return cast(float | None, ttl)
-
 
 def _distance_strategy(distance_type: str) -> DistanceStrategy:
     if distance_type == "l2":

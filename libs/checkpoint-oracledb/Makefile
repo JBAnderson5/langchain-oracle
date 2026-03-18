@@ -1,20 +1,10 @@
-.PHONY: test test_watch lint type format start-oracle stop-oracle
+.PHONY: test test_watch lint type format start-oracle stop-oracle enable-oracle-vectors
+
+UV_RUN = ./.venv/bin/python -m
 
 ######################
 # TESTING AND COVERAGE
 ######################
-
-start-oracle:
-	docker compose -f tests/compose-oracle.yml up -V --force-recreate --wait || ( \
-		echo "Failed to start Oracle, printing logs..."; \
-		docker compose -f tests/compose-oracle.yml logs; \
-		exit 1 \
-	)
-
-stop-oracle:
-	docker compose -f tests/compose-oracle.yml down
-
-UV_RUN = ./.venv/bin/python -m
 
 TEST ?= .
 test: start-oracle
@@ -65,3 +55,27 @@ type:
 format format_diff:
 	$(UV_RUN) ruff format $(PYTHON_FILES)
 	$(UV_RUN) ruff check --select I --fix $(PYTHON_FILES)
+
+
+######################
+# Local Docker DB
+######################
+
+start-oracle:
+	docker compose -f tests/compose-oracle.yml up -V --force-recreate --wait || ( \
+		echo "Failed to start Oracle, printing logs..."; \
+		docker compose -f tests/compose-oracle.yml logs; \
+		exit 1 \
+	)
+
+stop-oracle:
+	docker compose -f tests/compose-oracle.yml down
+
+enable-oracle-vectors:
+	@printf "%s\n" \
+		"alter system set vector_memory_size=1G scope=spfile sid='*';" \
+		"shutdown immediate;" \
+		"startup;" \
+		"exit" \
+	| docker exec -i oracle-free bash -lc "export ORACLE_SID=FREE; sqlplus -s / as sysdba"
+	@docker compose -f tests/compose-oracle.yml up -d --wait

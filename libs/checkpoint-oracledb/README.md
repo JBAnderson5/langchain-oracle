@@ -57,12 +57,16 @@ optional variables that may be required to connect to your oracle DB:
 
 ## Available example scripts
 
+### Checkpointer
 pure checkpointer example that shows all the public functions and details of the checkpointer data structures
 `uv run python examples/checkpointer_example.py`
 
 Shows how to use checkpointers when compiling a langgraph graph or a langchain-oracle create_oci_agent graph.
 `uv run python examples/checkpointer_agents_example.py`
 
+### (Memory) Store
+
+`uv run python examples/store_example.py`
 
 # TODO:
 - provide jadd and Kaushik a zip of the memory store code with Readme

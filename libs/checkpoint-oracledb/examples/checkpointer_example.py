@@ -9,12 +9,10 @@ PACKAGE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if PACKAGE_ROOT not in sys.path:
     sys.path.insert(0, PACKAGE_ROOT)
 
-import oracledb
 
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.base import ChannelVersions, Checkpoint, CheckpointMetadata
 from langgraph.checkpoint.oracledb import OracleDBSaver
-from langgraph.checkpoint.oracledb.db_conn_utils import connect_to_oracle
 
 from oracle_example_utils import connect_or_start_oracledb, stop_oracle_docker
 
