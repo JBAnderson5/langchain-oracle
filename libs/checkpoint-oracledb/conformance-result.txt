@@ -1,0 +1,116 @@
+docker compose -f tests/compose-oracle.yml up -V --force-recreate --wait || ( \
+		echo "Failed to start Oracle, printing logs..."; \
+		docker compose -f tests/compose-oracle.yml logs; \
+		exit 1 \
+	)
+  put:
+    ✓ test_put_returns_config
+    ✓ test_put_roundtrip
+    ✓ test_put_preserves_channel_values
+    ✓ test_put_preserves_channel_versions
+    ✓ test_put_preserves_versions_seen
+    ✓ test_put_preserves_metadata
+    ✓ test_put_root_namespace
+    ✓ test_put_child_namespace
+    ✓ test_put_default_namespace
+    ✓ test_put_multiple_checkpoints_same_thread
+    ✓ test_put_multiple_threads_isolated
+    ✓ test_put_parent_config
+    ✓ test_put_incremental_channel_update
+    ✓ test_put_new_channel_added
+    ✓ test_put_channel_removed
+    ✓ test_put_preserves_run_id
+    ✓ test_put_preserves_versions_seen_values
+  put_writes:
+    ✓ test_put_writes_basic
+    ✓ test_put_writes_multiple_writes_same_task
+    ✓ test_put_writes_multiple_tasks
+    ✓ test_put_writes_preserves_task_id
+    ✓ test_put_writes_preserves_channel_and_value
+    ✓ test_put_writes_task_path
+    ✓ test_put_writes_idempotent
+    ✓ test_put_writes_special_channels
+    ✓ test_put_writes_across_namespaces
+    ✓ test_put_writes_cleared_on_next_checkpoint
+  get_tuple:
+    ✓ test_get_tuple_nonexistent_returns_none
+    ✓ test_get_tuple_latest_when_no_checkpoint_id
+    ✓ test_get_tuple_specific_checkpoint_id
+    ✓ test_get_tuple_config_structure
+    ✓ test_get_tuple_checkpoint_fields
+    ✓ test_get_tuple_metadata
+    ✓ test_get_tuple_parent_config
+    ✓ test_get_tuple_pending_writes
+    ✓ test_get_tuple_respects_namespace
+    ✓ test_get_tuple_nonexistent_checkpoint_id
+  list:
+    ✓ test_list_all
+    ✓ test_list_by_thread
+    ✓ test_list_by_namespace
+    ✓ test_list_ordering
+    ✓ test_list_metadata_filter_single_key
+    ✓ test_list_metadata_filter_step
+    ✓ test_list_metadata_filter_multiple_keys
+    ✓ test_list_metadata_filter_no_match
+    ✓ test_list_metadata_custom_keys
+    ✓ test_list_global_search
+    ✓ test_list_before
+    ✓ test_list_limit
+    ✓ test_list_limit_plus_before
+    ✓ test_list_combined_thread_and_filter
+    ✓ test_list_empty_result
+    ✓ test_list_includes_pending_writes
+    ✓ test_list_multiple_namespaces
+  delete_thread:
+    ✓ test_delete_thread_removes_checkpoints
+    ✓ test_delete_thread_removes_writes
+    ✓ test_delete_thread_removes_all_namespaces
+    ✓ test_delete_thread_preserves_other_threads
+    ✓ test_delete_thread_nonexistent_noop
+  delete_for_runs:
+    ✓ test_delete_for_runs_single
+    ✓ test_delete_for_runs_multiple
+    ✓ test_delete_for_runs_preserves_other_runs
+    ✓ test_delete_for_runs_removes_writes
+    ✓ test_delete_for_runs_empty_list_noop
+    ✓ test_delete_for_runs_nonexistent_noop
+    ✓ test_delete_for_runs_across_namespaces
+  copy_thread:
+    ✓ test_copy_thread_basic
+    ✓ test_copy_thread_all_checkpoints
+    ✓ test_copy_thread_preserves_metadata
+    ✓ test_copy_thread_preserves_namespaces
+    ✓ test_copy_thread_preserves_writes
+    ✓ test_copy_thread_preserves_ordering
+    ✓ test_copy_thread_source_unchanged
+    ✓ test_copy_thread_nonexistent_source
+  prune:
+    ✓ test_prune_keep_latest_single_thread
+    ✓ test_prune_keep_latest_multiple_threads
+    ✓ test_prune_keep_latest_across_namespaces
+    ✓ test_prune_keep_latest_preserves_writes
+    ✓ test_prune_delete_all
+    ✓ test_prune_preserves_other_threads
+    ✓ test_prune_empty_list_noop
+    ✓ test_prune_nonexistent_noop
+
+  ====================================================
+    Checkpointer Validation: OracleDBSaver
+  ====================================================
+    BASE CAPABILITIES
+      ✅ delete_thread        
+      ✅ get_tuple            
+      ✅ list                 
+      ✅ put                  
+      ✅ put_writes           
+
+    EXTENDED CAPABILITIES
+      ✅ copy_thread          
+      ✅ delete_for_runs      
+      ✅ prune                
+
+    Result: FULL (8/8)
+  ====================================================
+
+docker compose -f tests/compose-oracle.yml down
+Finished langgraph conformance test of Oracle; Exit code: 0
