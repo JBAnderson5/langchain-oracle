@@ -10,9 +10,10 @@ from langgraph.checkpoint.oracledb.base_async_adapter import (
 )
 from db_conn_utils import connect_to_oracle
 
-from oracledb import Connection
 
-def setup_db() -> Connection:
+
+@checkpointer_test(name="OracleDBSaver")
+async def oracle_checkpointer() -> AsyncIterator[AsyncAdapter]:
     conn = connect_to_oracle(
         user="SYSTEM",
         password=os.environ.get("ORACLE_PWD", "OraclePwd_2025"),
@@ -21,24 +22,6 @@ def setup_db() -> Connection:
         wallet_password=None,
         test_connection=True,
     )
-
-    sql = [
-        "ALTER USER SYSTEM DEFAULT TABLESPACE USERS;",
-        "ALTER USER SYSTEM QUOTA UNLIMITED ON USERS;",
-        "ALTER USER SYSTEM TEMPORARY TABLESPACE TEMP;"
-    ]
-
-    with conn.cursor() as cursor:
-        for statement in sql:
-            cursor.execute(statement)
-    conn.commit()
-
-    return conn
-
-
-@checkpointer_test(name="OracleDBSaver")
-async def oracle_checkpointer() -> AsyncIterator[AsyncAdapter]:
-    conn = setup_db()
     saver = AsyncAdapter(conn)
     yield saver
     conn.close()

@@ -491,8 +491,6 @@ class OracleVSStore(BaseStore):
 
     def _upsert_vectors_for_op(self, op: PutOp, cursor: oracledb.Cursor) -> None:
         if not self.vector_store:
-            self._ensure_vector_store()
-        if not self.vector_store:
             return
         vector_requests = self._build_vector_requests(op)
         if not vector_requests:
@@ -600,8 +598,6 @@ class OracleVSStore(BaseStore):
                 results[original_idx] = self._sql_search(op, cursor)
 
     def _vector_search(self, op: SearchOp, cursor: oracledb.Cursor) -> list[SearchItem]:
-        if not self.vector_store:
-            self._ensure_vector_store()
         if not self.vector_store:
             return []
 

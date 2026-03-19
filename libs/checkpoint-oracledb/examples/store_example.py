@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import sys
 import uuid
+import json
 from typing import Any
 
 PACKAGE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -19,7 +20,10 @@ from oracle_example_utils import connect_or_start_oracledb, stop_oracle_docker, 
 def _print_items(label: str, items: list[Any]) -> None:
     print(label)
     for item in items:
-        print(item)
+        try:
+            print(json.dumps(item,indent = 4))
+        except:
+            print(item)
     print("\n")
 
 
@@ -100,7 +104,7 @@ def main() -> None:
         query=query,
         limit=5,
     )
-    _print_items(f"Vector search results for {query}:", vector_results)
+    _print_items(f"Vector search results for query: {query}", vector_results)
 
 
     # TODO: do an example of an onnx or similar in db embedding model

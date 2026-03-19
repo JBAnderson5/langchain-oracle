@@ -1,4 +1,4 @@
-.PHONY: test test_watch lint type format start-oracle stop-oracle enable-oracle-vectors
+.PHONY: test test_watch lint type format start-oracle stop-oracle enable-oracle-vectors setup-oracle-db
 
 UV_RUN = ./.venv/bin/python -m
 
@@ -67,9 +67,13 @@ start-oracle:
 		docker compose -f tests/compose-oracle.yml logs; \
 		exit 1 \
 	)
+	$(MAKE) setup-oracle-db
 
 stop-oracle:
 	docker compose -f tests/compose-oracle.yml down
+# stops DB and deletes data
+remove-oracle:
+	docker compose -f tests/compose-oracle.yml down -v
 
 enable-oracle-vectors:
 	@printf "%s\n" \
@@ -79,3 +83,11 @@ enable-oracle-vectors:
 		"exit" \
 	| docker exec -i oracle-free bash -lc "export ORACLE_SID=FREE; sqlplus -s / as sysdba"
 	@docker compose -f tests/compose-oracle.yml up -d --wait
+
+setup-oracle-db:
+	@printf "%s\n" \
+		"ALTER USER SYSTEM DEFAULT TABLESPACE USERS;" \
+		"ALTER USER SYSTEM QUOTA UNLIMITED ON USERS;" \
+		"ALTER USER SYSTEM TEMPORARY TABLESPACE TEMP;" \
+		"exit" \
+	| docker exec -i oracle-free bash -lc "export ORACLE_SID=FREE; sqlplus -s / as sysdba"

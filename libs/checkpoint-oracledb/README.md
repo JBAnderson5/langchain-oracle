@@ -66,16 +66,16 @@ Shows how to use checkpointers when compiling a langgraph graph or a langchain-o
 
 ### (Memory) Store
 
+Store example that shows how to create a non-vector store and a vector store using OCI gen ai service. Uses put() to create memories and search() to retrieve them
 `uv run python examples/store_example.py`
 
+Store example that uses a vector store in combination with a create_oci_agent() to show how agents can create and retrieve entity information about a user
+`uv run python examples/store_entity_example.py`
+
 # TODO:
-- provide jadd and Kaushik a zip of the memory store code with Readme
-- build a better/simpler example script
-    - work with new team member (srikanth) to build memory types
-    - check latest cohere/gemini embedding models
+- work with new team member (srikanth) to build memory types
+- check latest cohere/gemini embedding models
 - review postgres tests/make ours are more comprehensive
-- move over (memory store) in next PR cycle
-    - add to makefile etc.
 - build real async version (down the line)
 - how to add checkpointer/thread history to memory store (or extend checkpointers to include vectors)?
 - study summarization and anthropic compression
@@ -105,8 +105,6 @@ Testing requires additional dependencies:
 - this runs our unit tests (we don't have any yet)
 
 
-
-
 ## linting and formatting
 
 ```bash
@@ -123,7 +121,6 @@ make lint_tests     # only tests
 make lint_diff      # only files changed vs main
 
 ```
-
 
 # uv python environment troubleshooting
 
