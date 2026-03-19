@@ -104,6 +104,11 @@ class GenericProvider(Provider):
         return params
 
     @property
+    def supports_tool_choice(self) -> bool:
+        """GenericProvider models support tool_choice."""
+        return True
+
+    @property
     def supports_parallel_tool_calls(self) -> bool:
         """GenericProvider models support parallel tool calling."""
         return True
@@ -705,12 +710,10 @@ class GenericProvider(Provider):
         if (isinstance(tool, type) and issubclass(tool, BaseModel)) or callable(tool):
             as_json_schema_function = convert_to_openai_function(tool)
             parameters = as_json_schema_function.get("parameters", {})
+            fn_name = as_json_schema_function.get("name", "")
             return self.oci_function_definition(
-                name=as_json_schema_function.get("name"),
-                description=as_json_schema_function.get(
-                    "description",
-                    as_json_schema_function.get("name"),
-                ),
+                name=fn_name,
+                description=as_json_schema_function.get("description") or fn_name,
                 parameters={
                     "type": "object",
                     "properties": parameters.get("properties", {}),

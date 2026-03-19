@@ -686,12 +686,10 @@ class CohereProvider(Provider):
             as_json_schema_function = convert_to_openai_function(tool)
             parameters = as_json_schema_function.get("parameters", {})
             properties = parameters.get("properties", {})
+            fn_name = as_json_schema_function.get("name", "")
             return self.oci_tool(
-                name=as_json_schema_function.get("name"),
-                description=as_json_schema_function.get(
-                    "description",
-                    as_json_schema_function.get("name"),
-                ),
+                name=fn_name,
+                description=as_json_schema_function.get("description") or fn_name,
                 parameter_definitions={
                     p_name: self.oci_tool_param(
                         description=self._enrich_description(
