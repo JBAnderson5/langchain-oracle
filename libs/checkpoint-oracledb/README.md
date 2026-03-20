@@ -72,15 +72,20 @@ Store example that shows how to create a non-vector store and a vector store usi
 Store example that uses a vector store in combination with a create_oci_agent() to show how agents can create and retrieve entity information about a user
 `uv run python examples/store_entity_example.py`
 
+Store example using ChatOCIOpenAI with Langgraph. Loads a knowledge base from python module docstrings and dynamically fills llm's context window with knowledge base results from the user query
+`uv run python examples/store_knowledge_base_example.py`
 # TODO:
 - work with new team member (srikanth) to build memory types
+    - he already started using those hooks for long term memory
+- figure out who to talk to to merge code into upstream langchain-oracle
 - check latest cohere/gemini embedding models
-- review postgres tests/make ours are more comprehensive
+- review postgres tests/make ours more comprehensive
 - build real async version (down the line)
 - how to add checkpointer/thread history to memory store (or extend checkpointers to include vectors)?
 - study summarization and anthropic compression
 - copy memory/migrate memories from one AI harness/system to another
 - add wayflow example to checkpointer_agents_example.py once wayflow supports checkpoints
+
 
 
 
