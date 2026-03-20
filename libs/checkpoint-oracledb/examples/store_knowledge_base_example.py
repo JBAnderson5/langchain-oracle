@@ -17,7 +17,7 @@ PACKAGE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if PACKAGE_ROOT not in sys.path:
     sys.path.insert(0, PACKAGE_ROOT)
 
-from langgraph.store.oracledb import OracleIndexConfig, OracleVSStore
+from langgraph.store.oracledb import OracleIndexConfig, OracleStore
 
 from langchain_oci import ChatOCIOpenAI, OCIGenAIEmbeddings
 from oci_openai import OciUserPrincipalAuth
@@ -63,7 +63,7 @@ def search_knowledge(query: str, store: Annotated[Any, InjectedStore()],limit: i
         print(title)
     return "Knowledge base matches:\n" + "\n".join(lines)
 
-def _seed_knowledge_base(store: OracleVSStore) -> None:
+def _seed_knowledge_base(store: OracleStore) -> None:
     print("Seeding knowledge base with docstrings...")
     modules = {
         "langchain_oci.agents.react": "langchain_oci.agents.react",
@@ -113,7 +113,7 @@ def _create_llm() -> ChatOCIOpenAI:
     )
 
 
-def _build_graph(store: OracleVSStore, llm: ChatOCIOpenAI) -> StateGraph:
+def _build_graph(store: OracleStore, llm: ChatOCIOpenAI) -> StateGraph:
     def retrieve_knowledge(state: MessagesState) -> dict[str, list[Any]]:
         messages = state.get("messages", [])
         if not messages:
@@ -154,7 +154,7 @@ def main() -> None:
         auth_profile=os.getenv("OCI_AUTH_PROFILE"),
     )
     vector_dim = len(embeddings.embed_query("dimension probe"))
-    store = OracleVSStore(
+    store = OracleStore(
         conn=conn,
         index=OracleIndexConfig(
             embed=embeddings,

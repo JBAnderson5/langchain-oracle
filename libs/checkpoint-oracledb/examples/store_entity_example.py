@@ -13,7 +13,7 @@ PACKAGE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if PACKAGE_ROOT not in sys.path:
     sys.path.insert(0, PACKAGE_ROOT)
 
-from langgraph.store.oracledb import OracleIndexConfig, OracleVSStore
+from langgraph.store.oracledb import OracleIndexConfig, OracleStore
 
 from langchain_oci import OCIGenAIEmbeddings, create_oci_agent
 from oracle_example_utils import connect_or_start_oracledb, stop_oracle_docker, enable_oracle_vectors
@@ -69,7 +69,7 @@ def main() -> None:
     )
 
     vector_dim = len(embeddings.embed_query("dimension probe"))
-    vector_store = OracleVSStore(
+    vector_store = OracleStore(
         conn=conn,
         index=OracleIndexConfig(
             embed= embeddings,

@@ -109,7 +109,7 @@ class _VectorRequest:
     text: str
 
 
-class OracleVSStore(BaseStore):
+class OracleStore(BaseStore):
     """Oracle-backed BaseStore that delegates vector operations to OracleVS."""
 
     supports_ttl: bool = True
@@ -982,6 +982,6 @@ def _ensure_index_config(
 
 
 __all__ = [
-    "OracleVSStore",
+    "OracleStore",
     "OracleIndexConfig",
 ]

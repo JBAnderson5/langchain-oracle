@@ -1,6 +1,6 @@
-from .base import OracleIndexConfig, OracleVSStore
+from .base import OracleIndexConfig, OracleStore
 
 __all__ = [
-    "OracleVSStore",
+    "OracleStore",
     "OracleIndexConfig",
 ]

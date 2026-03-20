@@ -11,7 +11,7 @@ if PACKAGE_ROOT not in sys.path:
     sys.path.insert(0, PACKAGE_ROOT)
 
 
-from langgraph.store.oracledb import OracleIndexConfig, OracleVSStore
+from langgraph.store.oracledb import OracleIndexConfig, OracleStore
 
 from langchain_oci import OCIGenAIEmbeddings
 from oracle_example_utils import connect_or_start_oracledb, stop_oracle_docker, enable_oracle_vectors
@@ -34,7 +34,7 @@ def main() -> None:
     print("\n")
 
     print("creating oracle store object")
-    store = OracleVSStore(conn)
+    store = OracleStore(conn)
     print("Schema will be created if missing on any public function call by internally calling setup() function")
     print("\n")
 
@@ -42,7 +42,7 @@ def main() -> None:
     key = f"doc-{uuid.uuid4().hex[:8]}"
 
     print("putting item into store")
-    store.put(namespace, key, {"title": "OracleVSStore", "content": "Hello from Oracle", "tags": ["demo", "oracle"]})
+    store.put(namespace, key, {"title": "OracleStore", "content": "Hello from Oracle", "tags": ["demo", "oracle"]})
     print("\n")
 
     print("getting item from store")
@@ -60,7 +60,7 @@ def main() -> None:
     _print_items("Search results:", results)
 
     print("searching items with JSON filter")
-    filtered = store.search(("examples",), filter={"title": "OracleVSStore"}, limit=10)
+    filtered = store.search(("examples",), filter={"title": "OracleStore"}, limit=10)
     _print_items("Filtered results:", filtered)
 
     print("listing namespaces")
@@ -85,7 +85,7 @@ def main() -> None:
     )
 
     vector_dim = len(embeddings.embed_query("dimension probe"))
-    vector_store = OracleVSStore(
+    vector_store = OracleStore(
         conn=conn,
         index=OracleIndexConfig(
             embed= embeddings,
