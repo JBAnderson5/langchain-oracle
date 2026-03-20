@@ -144,7 +144,8 @@ def _build_graph(store: OracleVSStore, llm: ChatOCIOpenAI) -> StateGraph:
 def main() -> None:
     print("Langgraph docs on persistence: https://docs.langchain.com/oss/python/langgraph/persistence")
     conn, docker_oracle = connect_or_start_oracledb()
-    conn = enable_oracle_vectors()
+    if docker_oracle:
+        conn = enable_oracle_vectors()
 
     embeddings = OCIGenAIEmbeddings(
         model_id="cohere.embed-v4.0",

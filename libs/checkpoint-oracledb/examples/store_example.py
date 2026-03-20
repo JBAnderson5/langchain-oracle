@@ -74,7 +74,8 @@ def main() -> None:
     print("Vector search example using embeddings from oci gen ai service")
     print("\n")
 
-    conn = enable_oracle_vectors()
+    if docker_oracle:
+        conn = enable_oracle_vectors()
 
     embeddings = OCIGenAIEmbeddings(
     model_id="cohere.embed-v4.0",

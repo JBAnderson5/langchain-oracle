@@ -56,7 +56,8 @@ def search_entity(query: str, store: Annotated[Any,InjectedStore()]) -> str:
 def main() -> None:
     print("Langgraph docs on persistence: https://docs.langchain.com/oss/python/langgraph/persistence")
     conn, docker_oracle = connect_or_start_oracledb()
-    conn = enable_oracle_vectors()
+    if docker_oracle:
+        conn = enable_oracle_vectors()
     print("\n")
 
 
