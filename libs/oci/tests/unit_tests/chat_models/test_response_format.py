@@ -253,3 +253,129 @@ def test_response_format_model_kwargs():
     # Verify response_format is in the request
     assert hasattr(request.chat_request, "response_format")
     assert request.chat_request.response_format == {"type": "JSON_OBJECT"}
+
+
+# ---------------------------------------------------------------------------
+# Structured output: tool_choice and empty description fixes
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.requires("oci")
+def test_structured_output_passes_tool_choice_on_generic():
+    """with_structured_output must pass tool_choice=required on GenericProvider.
+
+    Without tool_choice, models like Gemini can return free-form text
+    instead of calling the tool, causing with_structured_output to return None.
+    """
+    from pydantic import BaseModel, Field
+
+    class Review(BaseModel):
+        title: str = Field(description="Title")
+        rating: int = Field(description="Rating")
+
+    oci_gen_ai_client = MagicMock()
+    llm = ChatOCIGenAI(
+        model_id="google.gemini-2.5-flash", client=oci_gen_ai_client
+    )
+
+    structured = llm.with_structured_output(Review)
+    # The first element of the chain is the bound model
+    bound = structured.first  # type: ignore[union-attr]
+    assert "tool_choice" in bound.kwargs, (
+        "with_structured_output should pass tool_choice on GenericProvider"
+    )
+
+
+@pytest.mark.requires("oci")
+def test_structured_output_no_tool_choice_on_cohere():
+    """with_structured_output must NOT pass tool_choice on CohereProvider.
+
+    Cohere's API does not support tool_choice and raises a ValueError.
+    """
+    from pydantic import BaseModel, Field
+
+    class Review(BaseModel):
+        """A review."""
+
+        title: str = Field(description="Title")
+        rating: int = Field(description="Rating")
+
+    oci_gen_ai_client = MagicMock()
+    llm = ChatOCIGenAI(
+        model_id="cohere.command-r-plus", client=oci_gen_ai_client
+    )
+
+    structured = llm.with_structured_output(Review)
+    bound = structured.first  # type: ignore[union-attr]
+    assert "tool_choice" not in bound.kwargs, (
+        "with_structured_output should not pass tool_choice on CohereProvider"
+    )
+
+
+@pytest.mark.requires("oci")
+def test_empty_description_fallback_generic():
+    """Pydantic models without docstrings should get the class name as description.
+
+    Without this fallback, some APIs reject tools with empty descriptions.
+    """
+    from pydantic import BaseModel, Field
+
+    from langchain_oci.chat_models.providers.generic import GenericProvider
+
+    class NoDocstring(BaseModel):
+        name: str = Field(description="Name")
+
+    provider = GenericProvider()
+    tool = provider.convert_to_oci_tool(NoDocstring)
+    assert tool.name == "NoDocstring"
+    assert tool.description == "NoDocstring", (
+        f"Empty description should fall back to class name, got: {tool.description!r}"
+    )
+
+
+@pytest.mark.requires("oci")
+def test_empty_description_fallback_cohere():
+    """Pydantic models without docstrings should get the class name as description.
+
+    Cohere's API rejects tools with empty descriptions (400 error).
+    """
+    from pydantic import BaseModel, Field
+
+    from langchain_oci.chat_models.providers.cohere import CohereProvider
+
+    class NoDocstring(BaseModel):
+        name: str = Field(description="Name")
+
+    provider = CohereProvider()
+    tool = provider.convert_to_oci_tool(NoDocstring)
+    assert tool.name == "NoDocstring"
+    assert tool.description == "NoDocstring", (
+        f"Empty description should fall back to class name, got: {tool.description!r}"
+    )
+
+
+@pytest.mark.requires("oci")
+def test_docstring_description_preserved():
+    """Models WITH docstrings should keep the original description."""
+    from pydantic import BaseModel, Field
+
+    from langchain_oci.chat_models.providers.generic import GenericProvider
+
+    class WithDocstring(BaseModel):
+        """This is a real description."""
+
+        name: str = Field(description="Name")
+
+    provider = GenericProvider()
+    tool = provider.convert_to_oci_tool(WithDocstring)
+    assert tool.description == "This is a real description."
+
+
+@pytest.mark.requires("oci")
+def test_supports_tool_choice_property():
+    """GenericProvider supports tool_choice, CohereProvider does not."""
+    from langchain_oci.chat_models.providers.cohere import CohereProvider
+    from langchain_oci.chat_models.providers.generic import GenericProvider
+
+    assert GenericProvider().supports_tool_choice is True
+    assert CohereProvider().supports_tool_choice is False
