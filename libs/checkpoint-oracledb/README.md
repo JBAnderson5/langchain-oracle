@@ -74,10 +74,9 @@ Store example that uses a vector store in combination with a create_oci_agent() 
 
 Store example using ChatOCIOpenAI with Langgraph. Loads a knowledge base from python module docstrings and dynamically fills llm's context window with knowledge base results from the user query
 `uv run python examples/store_knowledge_base_example.py`
+
 # TODO:
-- work with new team member (srikanth) to build memory types
-    - he already started using those hooks for long term memory
-- figure out who to talk to to merge code into upstream langchain-oracle
+- figure out who to talk to to merge code into upstream langchain-oracle - Federico Kamelhar
 - check latest cohere/gemini embedding models
 - review postgres tests/make ours more comprehensive
 - build real async version (down the line)
@@ -85,6 +84,16 @@ Store example using ChatOCIOpenAI with Langgraph. Loads a knowledge base from py
 - study summarization and anthropic compression
 - copy memory/migrate memories from one AI harness/system to another
 - add wayflow example to checkpointer_agents_example.py once wayflow supports checkpoints
+
+- __add `backend=` support to `create_deep_research_agent(...)`__
+- Patch the Langfuse callback to treat missing usage as 0:
+
+```python
+# in langfuse/langchain/CallbackHandler.py
+if usage_model["output"] is None:
+    usage_model["output"] = 0
+```
+
 
 
 
