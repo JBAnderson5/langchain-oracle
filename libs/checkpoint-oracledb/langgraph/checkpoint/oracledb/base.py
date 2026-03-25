@@ -639,6 +639,7 @@ class OracleDBSaver(BaseCheckpointSaver[str]):
             blob_values[key] = copy["channel_values"].pop(key)
         metadata_payload = get_serializable_checkpoint_metadata(config, metadata)
         with self._cursor(commit=True) as cursor:
+            cursor.setinputsizes(blob=oracledb.DB_TYPE_BLOB)
             if blob_versions := {
                 k: v for k, v in new_versions.items() if k in blob_values
             }:

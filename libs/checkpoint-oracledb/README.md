@@ -85,7 +85,6 @@ Store example using ChatOCIOpenAI with Langgraph. Loads a knowledge base from py
 - study summarization and anthropic compression
 - copy memory/migrate memories from one AI harness/system to another
 - add wayflow example to checkpointer_agents_example.py once wayflow supports checkpoints
-- should OracleStore actually be renamed to OracleStore?
 
 
 
