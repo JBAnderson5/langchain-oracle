@@ -610,6 +610,59 @@ class GenericProvider(Provider):
                 )
         return processed_content
 
+    def _get_tool_parameters(self, tool: BaseTool) -> Dict[str, Any]:
+        """Extract parameters from a BaseTool for OCI tool conversion.
+
+        Uses tool_call_schema (the model-facing schema) as the primary source.
+        This correctly excludes injected runtime parameters (e.g., ToolRuntime
+        with Callable types from Deep Agents middleware) that args_schema
+        includes and that Pydantic cannot serialize to JSON schema.
+
+        After building the base schema from tool_call_schema, overlays any
+        json_schema_extra constraints (enum, format, pattern, etc.) from the
+        original args_schema field definitions, since tool_call_schema does
+        not carry those forward.
+
+        Args:
+            tool: The BaseTool to extract parameters from.
+
+        Returns:
+            Dict containing the tool parameters schema.
+        """
+        tool_call_schema = getattr(tool, "tool_call_schema", None)
+        if tool_call_schema and hasattr(tool_call_schema, "model_json_schema"):
+            schema = tool_call_schema.model_json_schema()
+            # Overlay json_schema_extra constraints from args_schema when present
+            if tool.args_schema:
+                self._overlay_schema_extras(schema, tool.args_schema)
+            return schema
+        # Final fallback for tools without tool_call_schema
+        as_json_schema_function = convert_to_openai_function(tool)
+        return as_json_schema_function.get("parameters", {})
+
+    @staticmethod
+    def _overlay_schema_extras(
+        schema: Dict[str, Any],
+        args_schema: Union[type, Dict[str, Any]],
+    ) -> None:
+        """Overlay json_schema_extra from args_schema fields onto a schema.
+
+        tool_call_schema.model_json_schema() drops json_schema_extra (enum,
+        format, pattern, etc.). This restores those constraints from the
+        original args_schema field definitions for fields present in both.
+        """
+        properties = schema.get("properties", {})
+        if not properties:
+            return
+        fields = getattr(args_schema, "model_fields", {})
+        for field_name, prop in properties.items():
+            field_info = fields.get(field_name)
+            if field_info is None:
+                continue
+            extras = getattr(field_info, "json_schema_extra", None)
+            if extras and isinstance(extras, dict):
+                prop.update(extras)
+
     def convert_to_oci_tool(
         self,
         tool: Union[Dict[str, Any], Type[BaseModel], Callable, BaseTool],
@@ -631,12 +684,7 @@ class GenericProvider(Provider):
         if isinstance(tool, BaseTool):
             # Use model_json_schema() if available to preserve json_schema_extra
             # constraints (enum, format, etc.) that convert_to_openai_function strips
-            if tool.args_schema and hasattr(tool.args_schema, "model_json_schema"):
-                schema = tool.args_schema.model_json_schema()
-                parameters = schema
-            else:
-                as_json_schema_function = convert_to_openai_function(tool)
-                parameters = as_json_schema_function.get("parameters", {})
+            parameters = self._get_tool_parameters(tool)
 
             # Resolve $ref/$defs and anyOf — OCI doesn't support them
             resolved_params = OCIUtils.resolve_schema_refs(parameters)
