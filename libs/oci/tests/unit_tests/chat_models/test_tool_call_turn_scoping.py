@@ -27,7 +27,7 @@ class TestToolCallTurnScoping:
     @staticmethod
     def _make_tool_turn(n_tool_calls: int) -> list:
         """Build an AI→Tool sequence with n_tool_calls pairs."""
-        msgs = []
+        msgs: list = []
         for i in range(n_tool_calls):
             msgs.append(
                 AIMessage(
