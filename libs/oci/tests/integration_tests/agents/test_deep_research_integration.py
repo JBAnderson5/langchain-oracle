@@ -269,7 +269,7 @@ class TestOCIDeepAgentIntegration:
     @pytest.fixture
     def auth_profile(self) -> str:
         """Get auth profile from environment."""
-        return os.environ.get("OCI_CONFIG_PROFILE", "DEFAULT")
+        return os.environ.get("OCI_CONFIG_PROFILE", "API_KEY_AUTH")
 
     @pytest.fixture
     def agent(
@@ -449,7 +449,7 @@ def test_research_task_completion(task: dict) -> None:
     service_endpoint = f"https://inference.generativeai.{region}.oci.oraclecloud.com"
 
     auth_type = os.environ.get("OCI_AUTH_TYPE", "API_KEY")
-    auth_profile = os.environ.get("OCI_CONFIG_PROFILE", "DEFAULT")
+    auth_profile = os.environ.get("OCI_CONFIG_PROFILE", "API_KEY_AUTH")
 
     agent = create_deep_research_agent(
         tools=[search_knowledge_base, get_statistics, analyze_trends],
@@ -530,7 +530,7 @@ class TestOCIDeepAgentAsyncIntegration:
     @pytest.fixture
     def auth_profile(self) -> str:
         """Get auth profile from environment."""
-        return os.environ.get("OCI_CONFIG_PROFILE", "DEFAULT")
+        return os.environ.get("OCI_CONFIG_PROFILE", "API_KEY_AUTH")
 
     @pytest_asyncio.fixture
     async def async_agent(
@@ -634,7 +634,7 @@ def test_model_variants(model_id: str) -> None:
     service_endpoint = f"https://inference.generativeai.{region}.oci.oraclecloud.com"
 
     auth_type = os.environ.get("OCI_AUTH_TYPE", "API_KEY")
-    auth_profile = os.environ.get("OCI_CONFIG_PROFILE", "DEFAULT")
+    auth_profile = os.environ.get("OCI_CONFIG_PROFILE", "API_KEY_AUTH")
 
     agent = create_deep_research_agent(
         tools=[search_knowledge_base],

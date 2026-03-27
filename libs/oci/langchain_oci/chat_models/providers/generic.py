@@ -48,8 +48,12 @@ def _should_allow_more_tool_calls(
     """
     Determine if the model should be allowed to call more tools.
 
+    Only counts tool calls in the **current turn** (since the last HumanMessage),
+    so multi-turn conversations don't accumulate a stale count that blocks
+    legitimate tool use on subsequent user prompts.
+
     Returns False (force stop) if:
-    - Tool call limit exceeded
+    - Tool call limit exceeded in the current turn
     - Infinite loop detected (same tool called repeatedly with same args)
 
     Returns True otherwise to allow multi-step tool orchestration.
@@ -58,8 +62,17 @@ def _should_allow_more_tool_calls(
         messages: Conversation history
         max_tool_calls: Maximum number of tool calls before forcing stop
     """
-    # Count total tool calls made so far
-    tool_call_count = sum(1 for msg in messages if isinstance(msg, ToolMessage))
+    # Find the start of the current turn (last HumanMessage)
+    current_turn_start = 0
+    for i in range(len(messages) - 1, -1, -1):
+        if isinstance(messages[i], HumanMessage):
+            current_turn_start = i
+            break
+
+    current_turn = messages[current_turn_start:]
+
+    # Count tool calls in the current turn only
+    tool_call_count = sum(1 for msg in current_turn if isinstance(msg, ToolMessage))
 
     # Safety limit: prevent runaway tool calling
     if tool_call_count >= max_tool_calls:
@@ -67,7 +80,7 @@ def _should_allow_more_tool_calls(
 
     # Detect infinite loop: same tool called with same arguments in succession
     recent_calls: list = []
-    for msg in reversed(messages):
+    for msg in reversed(current_turn):
         if hasattr(msg, "tool_calls") and msg.tool_calls:
             for tc in msg.tool_calls:
                 # Create signature: (tool_name, sorted_args)
