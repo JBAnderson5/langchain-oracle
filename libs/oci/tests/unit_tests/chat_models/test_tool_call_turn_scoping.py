@@ -32,14 +32,10 @@ class TestToolCallTurnScoping:
             msgs.append(
                 AIMessage(
                     content="",
-                    tool_calls=[
-                        {"name": f"tool_{i}", "args": {}, "id": f"call_{i}"}
-                    ],
+                    tool_calls=[{"name": f"tool_{i}", "args": {}, "id": f"call_{i}"}],
                 )
             )
-            msgs.append(
-                ToolMessage(content=f"result_{i}", tool_call_id=f"call_{i}")
-            )
+            msgs.append(ToolMessage(content=f"result_{i}", tool_call_id=f"call_{i}"))
         return msgs
 
     def test_first_turn_under_limit(self):

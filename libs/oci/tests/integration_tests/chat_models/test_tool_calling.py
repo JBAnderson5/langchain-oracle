@@ -895,9 +895,7 @@ def test_gemini_multi_turn_tool_calls_not_blocked(model_id: str):
 
     # Count tool calls from turn 1 — we need enough to previously trigger
     # the global count bug (default max_sequential_tool_calls=8).
-    tool_msg_count = sum(
-        1 for m in result["messages"] if isinstance(m, ToolMessage)
-    )
+    tool_msg_count = sum(1 for m in result["messages"] if isinstance(m, ToolMessage))
     if tool_msg_count < 5:
         pytest.skip(
             f"Turn 1 only generated {tool_msg_count} tool calls "
