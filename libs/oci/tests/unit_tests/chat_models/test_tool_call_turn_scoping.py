@@ -12,11 +12,9 @@ finish_reason='unexpected_tool_call' with message=null, _generate produced
 an empty AIMessage that silently terminated the agent loop.
 """
 
-import pytest
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
 from langchain_oci.chat_models.providers.generic import _should_allow_more_tool_calls
-
 
 # ---------------------------------------------------------------------------
 # Bug 1: _should_allow_more_tool_calls per-turn scoping
