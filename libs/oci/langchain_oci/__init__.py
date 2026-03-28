@@ -7,13 +7,13 @@ from langchain_oci._compat import apply_compat_patches
 from langchain_oci.agents.react.agent import create_oci_agent
 
 if TYPE_CHECKING:
-    from langchain_oci.agents.datastores import (
+    from langchain_oci.agents.deep_research import create_deep_research_agent
+    from langchain_oci.datastores import (
         ADB,
         OpenSearch,
         VectorDataStore,
         create_datastore_tools,
     )
-    from langchain_oci.agents.deep_research import create_deep_research_agent
 from langchain_oci.chat_models.oci_data_science import (
     ChatOCIModelDeployment,
     ChatOCIModelDeploymentTGI,
@@ -51,11 +51,11 @@ def __getattr__(name: str) -> Any:
 
         return create_deep_research_agent
     if name == "create_datastore_tools":
-        from langchain_oci.agents.datastores import create_datastore_tools
+        from langchain_oci.datastores import create_datastore_tools
 
         return create_datastore_tools
     if name in ("VectorDataStore", "OpenSearch", "ADB"):
-        from langchain_oci.agents import datastores
+        from langchain_oci import datastores
 
         return getattr(datastores, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
@@ -79,7 +79,7 @@ __all__ = [
     "create_oci_agent",
     # Deep research agent
     "create_deep_research_agent",
-    # Datastores (shared by all agents)
+    # Datastores
     "VectorDataStore",
     "OpenSearch",
     "ADB",

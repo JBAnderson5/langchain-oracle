@@ -183,7 +183,7 @@ def create_embedding_model(model_id: str):
 
 def create_opensearch_store():
     """Create an OpenSearch store from configuration."""
-    from langchain_oci.agents.datastores import OpenSearch
+    from langchain_oci.datastores import OpenSearch
 
     config = get_opensearch_config()
     return OpenSearch(
@@ -201,7 +201,7 @@ def create_opensearch_store():
 
 def create_adb_store():
     """Create an ADB store from configuration."""
-    from langchain_oci.agents.datastores import ADB
+    from langchain_oci.datastores import ADB
 
     config = get_adb_config()
     return ADB(

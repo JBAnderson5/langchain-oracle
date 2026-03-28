@@ -9,8 +9,12 @@ from typing import TYPE_CHECKING, Any, Callable, Sequence
 
 from langchain_core.tools import BaseTool
 
-from langchain_oci.agents.common import OCIConfig, filter_none, merge_model_kwargs
-from langchain_oci.chat_models.oci_generative_ai import ChatOCIGenAI
+from langchain_oci.agents.common import (
+    AgentConfig,
+    _build_llm,
+    _filter_none,
+    _get_agent_factory,
+)
 from langchain_oci.common.auth import OCIAuthType
 
 if TYPE_CHECKING:
@@ -96,79 +100,48 @@ def create_oci_agent(
         ...     system_prompt="You are a helpful weather assistant.",
         ... )
     """
-    # Get agent creation function - prefer langchain >= 1.0.0
     create_agent_func, use_legacy_api = _get_agent_factory()
 
-    # Resolve OCI configuration
-    oci_config = OCIConfig.resolve(
+    config = AgentConfig(
+        model_id=model_id,
         compartment_id=compartment_id,
         service_endpoint=service_endpoint,
         auth_type=auth_type,
         auth_profile=auth_profile,
         auth_file_location=auth_file_location,
+        system_prompt=system_prompt,
+        checkpointer=checkpointer,
+        store=store,
+        interrupt_before=interrupt_before,
+        interrupt_after=interrupt_after,
+        debug=debug,
+        name=name,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        model_kwargs=model_kwargs,
     )
 
-    # Create OCI chat model
-    llm = ChatOCIGenAI(
-        model_id=model_id,
-        compartment_id=oci_config.compartment_id,
-        service_endpoint=oci_config.service_endpoint,
-        auth_type=oci_config.auth_type,
-        auth_profile=oci_config.auth_profile,
-        auth_file_location=oci_config.auth_file_location,
-        model_kwargs=merge_model_kwargs(
-            model_kwargs,
-            temperature,
-            max_tokens,
-            model_id=model_id,
-        ),
+    llm = _build_llm(
+        config,
         max_sequential_tool_calls=max_sequential_tool_calls,
         tool_result_guidance=tool_result_guidance,
     )
 
-    # Build agent kwargs
     prompt_key = "prompt" if use_legacy_api else "system_prompt"
     agent_kwargs = {
         "model": llm,
         "tools": list(tools),
-        **filter_none(
-            checkpointer=checkpointer,
-            store=store,
-            interrupt_before=interrupt_before,
-            interrupt_after=interrupt_after,
-            name=name,
-            **{prompt_key: system_prompt},
+        **_filter_none(
+            checkpointer=config.checkpointer,
+            store=config.store,
+            interrupt_before=config.interrupt_before,
+            interrupt_after=config.interrupt_after,
+            name=config.name,
+            **{prompt_key: config.system_prompt},
         ),
     }
 
-    if debug:
+    if config.debug:
         agent_kwargs["debug"] = True
 
     return create_agent_func(**agent_kwargs)
-
-
-def _get_agent_factory() -> tuple[Callable[..., Any], bool]:
-    """Get the appropriate agent factory function.
-
-    Returns:
-        Tuple of (factory_function, is_legacy_api).
-        is_legacy_api is True when using langgraph.prebuilt.create_react_agent.
-    """
-    # Try langchain >= 1.0.0 first
-    try:
-        from langchain.agents import create_agent
-
-        return create_agent, False
-    except (ImportError, AttributeError):
-        pass
-
-    # Fall back to langgraph.prebuilt for langchain < 1.0.0
-    try:
-        from langgraph.prebuilt import create_react_agent
-
-        return create_react_agent, True
-    except ImportError as ex:
-        raise ImportError(
-            "Could not import agent creation function. "
-            "Please install langchain>=1.0.0 or langgraph."
-        ) from ex

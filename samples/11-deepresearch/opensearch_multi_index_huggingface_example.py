@@ -12,7 +12,7 @@ from typing import Iterable, Optional, Sequence
 from langchain_core.documents import Document
 
 from langchain_oci import OCIGenAIEmbeddings, create_deep_research_agent
-from langchain_oci.agents import OpenSearch
+from langchain_oci.datastores import OpenSearch
 
 
 def load_huggingface_dataset(

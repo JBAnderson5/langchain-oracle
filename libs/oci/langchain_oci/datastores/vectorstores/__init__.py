@@ -8,7 +8,7 @@ Available backends:
 - ADB: Oracle Autonomous Database with vector support
 
 Example:
-    >>> from langchain_oci.agents import OpenSearch, ADB, create_datastore_tools
+    >>> from langchain_oci.datastores import OpenSearch, ADB, create_datastore_tools
     >>>
     >>> tools = create_datastore_tools(
     ...     stores={
@@ -19,9 +19,9 @@ Example:
     ... )
 """
 
-from langchain_oci.agents.datastores.vectorstores.adb import ADB
-from langchain_oci.agents.datastores.vectorstores.base import VectorDataStore
-from langchain_oci.agents.datastores.vectorstores.opensearch import OpenSearch
+from langchain_oci.datastores.vectorstores.adb import ADB
+from langchain_oci.datastores.vectorstores.base import VectorDataStore
+from langchain_oci.datastores.vectorstores.opensearch import OpenSearch
 
 __all__ = [
     "VectorDataStore",

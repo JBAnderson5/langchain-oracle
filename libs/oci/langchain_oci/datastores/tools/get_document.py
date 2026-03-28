@@ -7,8 +7,8 @@ from typing import ClassVar, Optional
 
 from pydantic import BaseModel
 
-from langchain_oci.agents.datastores.tools.base import DatastoreTool
-from langchain_oci.agents.datastores.tools.schemas import GetDocumentInput
+from langchain_oci.datastores.tools.base import DatastoreTool
+from langchain_oci.datastores.tools.schemas import GetDocumentInput
 
 
 class GetDocumentTool(DatastoreTool):

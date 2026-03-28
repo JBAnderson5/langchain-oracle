@@ -7,8 +7,8 @@ from typing import ClassVar
 
 from pydantic import BaseModel
 
-from langchain_oci.agents.datastores.tools.base import DatastoreTool
-from langchain_oci.agents.datastores.tools.schemas import SearchInput
+from langchain_oci.datastores.tools.base import DatastoreTool
+from langchain_oci.datastores.tools.schemas import SearchInput
 
 
 class SearchTool(DatastoreTool):

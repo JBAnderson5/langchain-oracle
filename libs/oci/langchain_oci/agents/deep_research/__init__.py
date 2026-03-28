@@ -8,7 +8,7 @@ Detailed usage and additional examples:
 
 Example:
     >>> from langchain_oci.agents.deep_research import create_deep_research_agent
-    >>> from langchain_oci.agents import OpenSearch, ADB
+    >>> from langchain_oci.datastores import OpenSearch, ADB
     >>>
     >>> agent = create_deep_research_agent(
     ...     datastores={
@@ -32,21 +32,8 @@ Example:
     ... )
 """
 
-# Re-export datastores from shared location for convenience
-from langchain_oci.agents.datastores import (
-    ADB,
-    OpenSearch,
-    VectorDataStore,
-    create_datastore_tools,
-)
 from langchain_oci.agents.deep_research.agent import create_deep_research_agent
 
 __all__ = [
-    # Main entry point
     "create_deep_research_agent",
-    # Re-exports from shared datastores
-    "VectorDataStore",
-    "OpenSearch",
-    "ADB",
-    "create_datastore_tools",
 ]

@@ -60,7 +60,7 @@ class TestCreateDeepResearchAgent:
 
         with patch.dict("os.environ", {"OCI_COMPARTMENT_ID": "test-compartment"}):
             with patch(
-                "langchain_oci.agents.deep_research.agent.ChatOCIGenAI"
+                "langchain_oci.chat_models.oci_generative_ai.ChatOCIGenAI"
             ) as mock_llm_class:
                 with mock_deepagents() as mock_create:
                     mock_llm_instance = MagicMock()
@@ -88,15 +88,13 @@ class TestCreateDeepResearchAgent:
 
         with patch.dict("os.environ", {"OCI_COMPARTMENT_ID": "test-compartment"}):
             with patch(
-                "langchain_oci.agents.deep_research.agent.ChatOCIGenAI"
+                "langchain_oci.chat_models.oci_generative_ai.ChatOCIGenAI"
             ) as mock_llm_class:
                 with patch(
                     "langchain_oci.agents.deep_research.agent.create_datastore_tools",
                     return_value=[],
                 ):
-                    with patch(
-                        "langchain_oci.agents.deep_research.agent.create_agent"
-                    ) as mock_create_agent:
+                    with patch("langchain.agents.create_agent") as mock_create_agent:
                         mock_llm_class.return_value = MagicMock()
                         mock_create_agent.return_value = MagicMock()
 
@@ -110,11 +108,9 @@ class TestCreateDeepResearchAgent:
 
         with patch.dict("os.environ", {"OCI_COMPARTMENT_ID": "test-compartment"}):
             with patch(
-                "langchain_oci.agents.deep_research.agent.ChatOCIGenAI"
+                "langchain_oci.chat_models.oci_generative_ai.ChatOCIGenAI"
             ) as mock_llm_class:
-                with patch(
-                    "langchain_oci.agents.deep_research.agent.create_agent"
-                ) as mock_create_agent:
+                with patch("langchain.agents.create_agent") as mock_create_agent:
                     mock_llm_class.return_value = MagicMock()
                     mock_create_agent.return_value = MagicMock()
 
@@ -133,7 +129,7 @@ class TestCreateDeepResearchAgent:
         fake_store.name = "opensearch"
 
         with patch.dict("os.environ", {"OCI_COMPARTMENT_ID": "test"}):
-            with patch("langchain_oci.agents.deep_research.agent.ChatOCIGenAI"):
+            with patch("langchain_oci.chat_models.oci_generative_ai.ChatOCIGenAI"):
                 with patch(
                     "langchain_oci.agents.deep_research.agent.create_datastore_tools",
                     return_value=[],
@@ -152,7 +148,7 @@ class TestCreateDeepResearchAgent:
         from langchain_oci.agents.deep_research.agent import create_deep_research_agent
 
         with patch.dict("os.environ", {"OCI_COMPARTMENT_ID": "test"}):
-            with patch("langchain_oci.agents.deep_research.agent.ChatOCIGenAI"):
+            with patch("langchain_oci.chat_models.oci_generative_ai.ChatOCIGenAI"):
                 with mock_deepagents() as mock_create:
                     create_deep_research_agent(
                         tools=[dummy_tool],
@@ -169,7 +165,7 @@ class TestCreateDeepResearchAgent:
         from langchain_oci.agents.deep_research.agent import create_deep_research_agent
 
         with patch.dict("os.environ", {"OCI_COMPARTMENT_ID": "test"}):
-            with patch("langchain_oci.agents.deep_research.agent.ChatOCIGenAI"):
+            with patch("langchain_oci.chat_models.oci_generative_ai.ChatOCIGenAI"):
                 with mock_deepagents() as mock_create:
                     create_deep_research_agent(
                         tools=[dummy_tool],
@@ -215,7 +211,7 @@ class TestCreateDeepResearchAgent:
         from langchain_oci.agents.deep_research.agent import create_deep_research_agent
 
         with patch.dict("os.environ", {"OCI_COMPARTMENT_ID": "test"}):
-            with patch("langchain_oci.agents.deep_research.agent.ChatOCIGenAI"):
+            with patch("langchain_oci.chat_models.oci_generative_ai.ChatOCIGenAI"):
                 with mock_deepagents() as mock_create:
                     create_deep_research_agent(
                         tools=[dummy_tool],
@@ -230,7 +226,7 @@ class TestCreateDeepResearchAgent:
         from langchain_oci.agents.deep_research.agent import create_deep_research_agent
 
         with patch.dict("os.environ", {"OCI_COMPARTMENT_ID": "test"}):
-            with patch("langchain_oci.agents.deep_research.agent.ChatOCIGenAI"):
+            with patch("langchain_oci.chat_models.oci_generative_ai.ChatOCIGenAI"):
                 with mock_deepagents() as mock_create:
                     mock_checkpointer = MagicMock()
 
@@ -248,7 +244,7 @@ class TestCreateDeepResearchAgent:
 
         with patch.dict("os.environ", {"OCI_COMPARTMENT_ID": "test"}):
             with patch(
-                "langchain_oci.agents.deep_research.agent.ChatOCIGenAI"
+                "langchain_oci.chat_models.oci_generative_ai.ChatOCIGenAI"
             ) as mock_llm_class:
                 with mock_deepagents():
                     create_deep_research_agent(
@@ -271,7 +267,7 @@ class TestCreateDeepResearchAgent:
 
         with patch.dict("os.environ", {"OCI_COMPARTMENT_ID": "test"}):
             with patch(
-                "langchain_oci.agents.deep_research.agent.ChatOCIGenAI"
+                "langchain_oci.chat_models.oci_generative_ai.ChatOCIGenAI"
             ) as mock_llm_class:
                 with mock_deepagents():
                     create_deep_research_agent(
@@ -288,7 +284,7 @@ class TestCreateDeepResearchAgent:
 
         with patch.dict("os.environ", {"OCI_COMPARTMENT_ID": "test"}):
             with patch(
-                "langchain_oci.agents.deep_research.agent.ChatOCIGenAI"
+                "langchain_oci.chat_models.oci_generative_ai.ChatOCIGenAI"
             ) as mock_llm_class:
                 with mock_deepagents():
                     create_deep_research_agent(
@@ -308,7 +304,7 @@ class TestCreateDeepResearchAgent:
             {"OCI_COMPARTMENT_ID": "test", "OCI_REGION": "us-ashburn-1"},
         ):
             with patch(
-                "langchain_oci.agents.deep_research.agent.ChatOCIGenAI"
+                "langchain_oci.chat_models.oci_generative_ai.ChatOCIGenAI"
             ) as mock_llm_class:
                 with mock_deepagents():
                     create_deep_research_agent(tools=[dummy_tool])
@@ -329,7 +325,7 @@ class TestCreateDeepResearchAgent:
             {"OCI_COMPARTMENT_ID": "test", "OCI_REGION": "us-chicago-1"},
         ):
             with patch(
-                "langchain_oci.agents.deep_research.agent.ChatOCIGenAI"
+                "langchain_oci.chat_models.oci_generative_ai.ChatOCIGenAI"
             ) as mock_llm_class:
                 with mock_deepagents():
                     create_deep_research_agent(
@@ -346,7 +342,7 @@ class TestCreateDeepResearchAgent:
         from langchain_oci.agents.deep_research.agent import create_deep_research_agent
 
         with patch.dict("os.environ", {"OCI_COMPARTMENT_ID": "test"}):
-            with patch("langchain_oci.agents.deep_research.agent.ChatOCIGenAI"):
+            with patch("langchain_oci.chat_models.oci_generative_ai.ChatOCIGenAI"):
                 with mock_deepagents() as mock_create:
                     mock_subagents = [MagicMock()]
                     mock_store = MagicMock()
@@ -375,7 +371,7 @@ class TestCreateDeepResearchAgent:
 
         with patch.dict("os.environ", {"OCI_COMPARTMENT_ID": "test"}):
             with patch(
-                "langchain_oci.agents.deep_research.agent.ChatOCIGenAI"
+                "langchain_oci.chat_models.oci_generative_ai.ChatOCIGenAI"
             ) as mock_llm_class:
                 with mock_deepagents() as mock_create:
                     mock_backend = MagicMock()
@@ -399,7 +395,7 @@ class TestCreateDeepResearchAgent:
         from langchain_oci.agents.deep_research.agent import create_deep_research_agent
 
         with patch.dict("os.environ", {"OCI_COMPARTMENT_ID": "test"}):
-            with patch("langchain_oci.agents.deep_research.agent.ChatOCIGenAI"):
+            with patch("langchain_oci.chat_models.oci_generative_ai.ChatOCIGenAI"):
                 with mock_deepagents() as mock_create:
                     mock_format = MagicMock()
 
@@ -416,7 +412,7 @@ class TestCreateDeepResearchAgent:
         from langchain_oci.agents.deep_research.agent import create_deep_research_agent
 
         with patch.dict("os.environ", {"OCI_COMPARTMENT_ID": "test"}):
-            with patch("langchain_oci.agents.deep_research.agent.ChatOCIGenAI"):
+            with patch("langchain_oci.chat_models.oci_generative_ai.ChatOCIGenAI"):
                 with mock_deepagents() as mock_create:
                     create_deep_research_agent(
                         tools=[dummy_tool],
@@ -431,7 +427,7 @@ class TestCreateDeepResearchAgent:
         from langchain_oci.agents.deep_research.agent import create_deep_research_agent
 
         with patch.dict("os.environ", {"OCI_COMPARTMENT_ID": "test"}):
-            with patch("langchain_oci.agents.deep_research.agent.ChatOCIGenAI"):
+            with patch("langchain_oci.chat_models.oci_generative_ai.ChatOCIGenAI"):
                 with mock_deepagents() as mock_create:
                     mock_cache = MagicMock()
 
@@ -448,7 +444,7 @@ class TestCreateDeepResearchAgent:
         from langchain_oci.agents.deep_research.agent import create_deep_research_agent
 
         with patch.dict("os.environ", {"OCI_COMPARTMENT_ID": "test"}):
-            with patch("langchain_oci.agents.deep_research.agent.ChatOCIGenAI"):
+            with patch("langchain_oci.chat_models.oci_generative_ai.ChatOCIGenAI"):
                 with mock_deepagents() as mock_create:
                     interrupt_config = {"edit_file": True, "write_file": True}
 
@@ -466,7 +462,7 @@ class TestCreateDeepResearchAgent:
 
         with patch.dict("os.environ", {"OCI_COMPARTMENT_ID": "test"}):
             with patch(
-                "langchain_oci.agents.deep_research.agent.ChatOCIGenAI"
+                "langchain_oci.chat_models.oci_generative_ai.ChatOCIGenAI"
             ) as mock_llm_class:
                 with mock_deepagents():
                     create_deep_research_agent(
@@ -495,7 +491,7 @@ class TestCreateDeepResearchAgent:
         from langchain_oci.agents.deep_research.agent import create_deep_research_agent
 
         with patch.dict("os.environ", {"OCI_COMPARTMENT_ID": "test"}):
-            with patch("langchain_oci.agents.deep_research.agent.ChatOCIGenAI"):
+            with patch("langchain_oci.chat_models.oci_generative_ai.ChatOCIGenAI"):
                 with mock_deepagents() as mock_create:
                     create_deep_research_agent(tools=[dummy_tool])
 
@@ -524,7 +520,7 @@ class TestCreateDeepResearchAgent:
 
         with patch.dict("os.environ", {"OCI_COMPARTMENT_ID": "test"}):
             with patch(
-                "langchain_oci.agents.deep_research.agent.ChatOCIGenAI"
+                "langchain_oci.chat_models.oci_generative_ai.ChatOCIGenAI"
             ) as mock_llm_class:
                 with mock_deepagents():
                     create_deep_research_agent(
@@ -541,7 +537,7 @@ class TestCreateDeepResearchAgent:
 
         with patch.dict("os.environ", {"OCI_COMPARTMENT_ID": "test"}):
             with patch(
-                "langchain_oci.agents.deep_research.agent.ChatOCIGenAI"
+                "langchain_oci.chat_models.oci_generative_ai.ChatOCIGenAI"
             ) as mock_llm_class:
                 with mock_deepagents():
                     create_deep_research_agent(
@@ -559,7 +555,7 @@ class TestCreateDeepResearchAgent:
         from langchain_oci.agents.deep_research.agent import create_deep_research_agent
 
         with patch.dict("os.environ", {"OCI_COMPARTMENT_ID": "test"}):
-            with patch("langchain_oci.agents.deep_research.agent.ChatOCIGenAI"):
+            with patch("langchain_oci.chat_models.oci_generative_ai.ChatOCIGenAI"):
                 with mock_deepagents() as mock_create:
                     create_deep_research_agent(tools=[dummy_tool])
 
@@ -572,7 +568,7 @@ class TestCreateDeepResearchAgent:
 
         with patch.dict("os.environ", {"OCI_COMPARTMENT_ID": "test"}):
             with patch(
-                "langchain_oci.agents.deep_research.agent.ChatOCIGenAI"
+                "langchain_oci.chat_models.oci_generative_ai.ChatOCIGenAI"
             ) as mock_llm_class:
                 with mock_deepagents():
                     create_deep_research_agent(
@@ -608,28 +604,18 @@ def test_import_from_agents_module() -> None:
 class TestVectorDataStoreImports:
     """Tests for VectorDataStore and datastore imports."""
 
-    def test_import_vector_datastore_from_agents(self) -> None:
-        """Test VectorDataStore can be imported from agents."""
-        from langchain_oci.agents import VectorDataStore
+    def test_import_from_datastores(self) -> None:
+        """Test datastores can be imported from langchain_oci.datastores."""
+        from langchain_oci.datastores import (
+            ADB,
+            OpenSearch,
+            VectorDataStore,
+            create_datastore_tools,
+        )
 
         assert VectorDataStore is not None
-
-    def test_import_opensearch_from_agents(self) -> None:
-        """Test OpenSearch can be imported from agents."""
-        from langchain_oci.agents import OpenSearch
-
         assert OpenSearch is not None
-
-    def test_import_adb_from_agents(self) -> None:
-        """Test ADB can be imported from agents."""
-        from langchain_oci.agents import ADB
-
         assert ADB is not None
-
-    def test_import_create_datastore_tools_from_agents(self) -> None:
-        """Test create_datastore_tools can be imported from agents."""
-        from langchain_oci.agents import create_datastore_tools
-
         assert create_datastore_tools is not None
         assert callable(create_datastore_tools)
 
@@ -647,23 +633,9 @@ class TestVectorDataStoreImports:
         assert ADB is not None
         assert create_datastore_tools is not None
 
-    def test_reexport_from_deep_research(self) -> None:
-        """Test datastores are re-exported from deep_research for convenience."""
-        from langchain_oci.agents.deep_research import (
-            ADB,
-            OpenSearch,
-            VectorDataStore,
-            create_datastore_tools,
-        )
-
-        assert VectorDataStore is not None
-        assert OpenSearch is not None
-        assert ADB is not None
-        assert create_datastore_tools is not None
-
     def test_import_from_vectorstores_submodule(self) -> None:
         """Test direct import from vectorstores submodule."""
-        from langchain_oci.agents.datastores.vectorstores import (
+        from langchain_oci.datastores.vectorstores import (
             ADB,
             OpenSearch,
             VectorDataStore,

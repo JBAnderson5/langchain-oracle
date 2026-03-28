@@ -10,15 +10,15 @@ from typing import TYPE_CHECKING, Any, Optional
 
 from langchain_core.tools import BaseTool
 
-from langchain_oci.agents.datastores.tools.base import ResultFormatter
-from langchain_oci.agents.datastores.tools.get_document import GetDocumentTool
-from langchain_oci.agents.datastores.tools.keyword_search import KeywordSearchTool
-from langchain_oci.agents.datastores.tools.search import SearchTool
-from langchain_oci.agents.datastores.tools.selector import StoreSelector
-from langchain_oci.agents.datastores.tools.stats import StatsTool
+from langchain_oci.datastores.tools.base import ResultFormatter
+from langchain_oci.datastores.tools.get_document import GetDocumentTool
+from langchain_oci.datastores.tools.keyword_search import KeywordSearchTool
+from langchain_oci.datastores.tools.search import SearchTool
+from langchain_oci.datastores.tools.selector import StoreSelector
+from langchain_oci.datastores.tools.stats import StatsTool
 
 if TYPE_CHECKING:
-    from langchain_oci.agents.datastores.vectorstores import VectorDataStore
+    from langchain_oci.datastores.vectorstores import VectorDataStore
 
 
 def create_datastore_tools(

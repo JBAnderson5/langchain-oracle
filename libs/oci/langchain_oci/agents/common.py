@@ -1,114 +1,125 @@
 # Copyright (c) 2026 Oracle and/or its affiliates.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/
 
-"""Common utilities for OCI agents."""
+"""Shared agent configuration and LLM builder."""
 
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
-from typing import Any, Union
+from typing import Any, Callable, Dict, List, Optional, Union
+
+from pydantic import BaseModel, Field, model_validator
 
 from langchain_oci.common.auth import OCIAuthType
 
 
-@dataclass(frozen=True)
-class OCIConfig:
-    """Resolved OCI configuration for agent creation."""
+class AgentConfig(BaseModel):
+    """Base configuration shared by all OCI agents."""
 
-    compartment_id: str
-    service_endpoint: str
-    auth_type: str
-    auth_profile: str
-    auth_file_location: str
+    model_config = {"populate_by_name": True, "arbitrary_types_allowed": True}
 
-    @classmethod
-    def resolve(
-        cls,
-        compartment_id: str | None = None,
-        service_endpoint: str | None = None,
-        auth_type: Union[str, OCIAuthType] = OCIAuthType.API_KEY,
-        auth_profile: str = "DEFAULT",
-        auth_file_location: str = "~/.oci/config",
-        default_region: str = "us-chicago-1",
-        require_compartment: bool = True,
-    ) -> "OCIConfig":
-        """Resolve OCI configuration from parameters and environment.
+    model_id: str = "meta.llama-4-scout-17b-16e-instruct"
+    compartment_id: Optional[str] = None
+    service_endpoint: Optional[str] = None
+    auth_type: Union[str, OCIAuthType] = OCIAuthType.API_KEY
+    auth_profile: str = "DEFAULT"
+    auth_file_location: str = "~/.oci/config"
+    system_prompt: Optional[str] = None
+    checkpointer: Optional[Any] = None
+    store: Optional[Any] = None
+    interrupt_before: Optional[List[str]] = None
+    interrupt_after: Optional[List[str]] = None
+    debug: bool = False
+    name: Optional[str] = None
+    temperature: Optional[float] = None
+    max_tokens: Optional[int] = None
+    model_kwargs: Dict[str, Any] = Field(default_factory=dict)
 
-        Args:
-            compartment_id: OCI compartment OCID, or None to read from env.
-            service_endpoint: Service endpoint, or None to construct from region.
-            auth_type: Authentication type as string or enum.
-            auth_profile: OCI config profile name.
-            auth_file_location: Path to OCI config file.
-            default_region: Default region if OCI_REGION not set.
-            require_compartment: If True, raise ValueError when compartment missing.
-
-        Returns:
-            Resolved OCIConfig instance.
-
-        Raises:
-            ValueError: If compartment_id is required but not available.
-        """
-        # Resolve compartment_id
-        resolved_compartment = compartment_id or os.environ.get("OCI_COMPARTMENT_ID")
-        if require_compartment and not resolved_compartment:
+    @model_validator(mode="after")
+    def _resolve_oci_env(self) -> "AgentConfig":
+        """Resolve compartment and endpoint from environment if not set."""
+        if not self.compartment_id:
+            self.compartment_id = os.environ.get("OCI_COMPARTMENT_ID")
+        if not self.compartment_id:
             raise ValueError(
                 "compartment_id must be provided or set via "
                 "OCI_COMPARTMENT_ID environment variable"
             )
-
-        # Resolve service_endpoint
-        resolved_endpoint = service_endpoint or os.environ.get("OCI_SERVICE_ENDPOINT")
-        if not resolved_endpoint:
-            region = os.environ.get("OCI_REGION", default_region)
-            resolved_endpoint = (
+        if not self.service_endpoint:
+            self.service_endpoint = os.environ.get("OCI_SERVICE_ENDPOINT")
+        if not self.service_endpoint:
+            region = os.environ.get("OCI_REGION", "us-chicago-1")
+            self.service_endpoint = (
                 f"https://inference.generativeai.{region}.oci.oraclecloud.com"
             )
-
-        # Normalize auth_type to string
-        if isinstance(auth_type, OCIAuthType):
-            auth_type_str = auth_type.name
-        else:
-            auth_type_str = auth_type
-
-        return cls(
-            compartment_id=resolved_compartment or "",
-            service_endpoint=resolved_endpoint,
-            auth_type=auth_type_str,
-            auth_profile=auth_profile,
-            auth_file_location=auth_file_location,
-        )
+        return self
 
 
-def filter_none(**kwargs: Any) -> dict[str, Any]:
-    """Filter out None values from keyword arguments.
+def _build_llm(config: AgentConfig, **extra_kwargs: Any) -> Any:
+    """Build a ChatOCIGenAI instance from an AgentConfig.
 
-    This is useful for building kwargs dicts where None means "use default".
+    Args:
+        config: Resolved agent configuration.
+        **extra_kwargs: Additional kwargs passed to ChatOCIGenAI
+            (e.g. max_sequential_tool_calls, tool_result_guidance).
 
-    Example:
-        >>> filter_none(a=1, b=None, c="hello")
-        {'a': 1, 'c': 'hello'}
+    Returns:
+        ChatOCIGenAI instance.
     """
+    from langchain_oci.chat_models.oci_generative_ai import ChatOCIGenAI
+
+    auth_type = (
+        config.auth_type.name
+        if isinstance(config.auth_type, OCIAuthType)
+        else config.auth_type
+    )
+
+    merged_kwargs = {**config.model_kwargs}
+    if config.temperature is not None:
+        merged_kwargs["temperature"] = config.temperature
+    if config.max_tokens is not None:
+        if config.model_id and config.model_id.startswith("openai."):
+            merged_kwargs["max_completion_tokens"] = config.max_tokens
+        else:
+            merged_kwargs["max_tokens"] = config.max_tokens
+
+    return ChatOCIGenAI(
+        model_id=config.model_id,
+        compartment_id=config.compartment_id or "",
+        service_endpoint=config.service_endpoint or "",
+        auth_type=auth_type,
+        auth_profile=config.auth_profile,
+        auth_file_location=config.auth_file_location,
+        model_kwargs=merged_kwargs or None,
+        **extra_kwargs,
+    )
+
+
+def _get_agent_factory() -> tuple[Callable[..., Any], bool]:
+    """Get the appropriate agent factory function.
+
+    Returns:
+        Tuple of (factory_function, is_legacy_api).
+        is_legacy_api is True when using langgraph.prebuilt.create_react_agent.
+    """
+    try:
+        from langchain.agents import create_agent
+
+        return create_agent, False
+    except (ImportError, AttributeError):
+        pass
+
+    try:
+        from langgraph.prebuilt import create_react_agent
+
+        return create_react_agent, True
+    except ImportError as ex:
+        raise ImportError(
+            "Could not import agent creation function. "
+            "Please install langchain>=1.0.0 or langgraph."
+        ) from ex
+
+
+def _filter_none(**kwargs: Any) -> dict[str, Any]:
+    """Filter out None values from keyword arguments."""
     return {k: v for k, v in kwargs.items() if v is not None}
-
-
-def merge_model_kwargs(
-    base_kwargs: dict[str, Any],
-    temperature: float | None = None,
-    max_tokens: int | None = None,
-    model_id: str | None = None,
-) -> dict[str, Any] | None:
-    """Merge temperature and max_tokens into model kwargs.
-
-    Returns None if the result is empty (to avoid passing empty dict).
-    """
-    result = {**base_kwargs}
-    if temperature is not None:
-        result["temperature"] = temperature
-    if max_tokens is not None:
-        if model_id and model_id.startswith("openai."):
-            result["max_completion_tokens"] = max_tokens
-        else:
-            result["max_tokens"] = max_tokens
-    return result or None

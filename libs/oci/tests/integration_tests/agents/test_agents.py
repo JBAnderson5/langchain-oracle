@@ -181,7 +181,7 @@ class TestMultiStoreRouting:
 
     def test_routing_based_on_datastore_descriptions(self) -> None:
         """Test that queries are routed based on datastore descriptions."""
-        from langchain_oci.agents.datastores.tools import StoreSelector
+        from langchain_oci.datastores.tools import StoreSelector
 
         opensearch_store = create_opensearch_store()
         adb_store = create_adb_store()

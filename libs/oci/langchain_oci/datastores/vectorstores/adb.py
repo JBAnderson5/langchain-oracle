@@ -12,7 +12,7 @@ from typing import Any, Optional
 
 from langchain_core.documents import Document
 
-from langchain_oci.agents.datastores.vectorstores.base import VectorDataStore
+from langchain_oci.datastores.vectorstores.base import VectorDataStore
 
 
 @dataclass
@@ -23,7 +23,7 @@ class ADB(VectorDataStore):
     operations.
 
     Example:
-        >>> from langchain_oci.agents import ADB, create_datastore_tools
+        >>> from langchain_oci.datastores import ADB, create_datastore_tools
         >>>
         >>> store = ADB(
         ...     dsn="mydb_low",

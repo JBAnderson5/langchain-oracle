@@ -1,22 +1,22 @@
 # Copyright (c) 2026 Oracle and/or its affiliates.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/
 
-"""Datastores for OCI agents.
+"""Datastores for OCI.
 
-This module provides pluggable datastore backends and tools for search.
-Use with any agent: create_oci_agent, OCIGenAIAgent, or create_deep_research_agent.
+Pluggable datastore backends and tools for search.
+Use with any agent: create_oci_agent or create_deep_research_agent.
 
 Submodules:
 - vectorstores: Vector similarity search backends (OpenSearch, ADB)
 - tools: LangChain tools for datastore operations
 
 Example:
-    >>> from langchain_oci.agents import (
+    >>> from langchain_oci.datastores import (
     ...     OpenSearch,
     ...     ADB,
     ...     create_datastore_tools,
-    ...     create_oci_agent,
     ... )
+    >>> from langchain_oci.agents import create_oci_agent
     >>>
     >>> tools = create_datastore_tools(
     ...     stores={
@@ -34,7 +34,7 @@ Example:
 
 # Vector stores
 # Tools
-from langchain_oci.agents.datastores.tools import (
+from langchain_oci.datastores.tools import (
     GetDocumentTool,
     KeywordSearchTool,
     ResultFormatter,
@@ -45,7 +45,7 @@ from langchain_oci.agents.datastores.tools import (
     StoreStats,
     create_datastore_tools,
 )
-from langchain_oci.agents.datastores.vectorstores import (
+from langchain_oci.datastores.vectorstores import (
     ADB,
     OpenSearch,
     VectorDataStore,

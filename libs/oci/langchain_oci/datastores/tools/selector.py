@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 
 if TYPE_CHECKING:
-    from langchain_oci.agents.datastores.vectorstores import VectorDataStore
+    from langchain_oci.datastores.vectorstores import VectorDataStore
 
 
 class StoreSelector:

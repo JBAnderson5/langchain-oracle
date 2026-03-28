@@ -145,7 +145,8 @@ Important:
 ```python
 from langchain_core.messages import HumanMessage
 from langchain_oci import OCIGenAIEmbeddings
-from langchain_oci.agents import ADB, create_deep_research_agent
+from langchain_oci import create_deep_research_agent
+from langchain_oci.datastores import ADB
 
 # Requires langchain-oracledb for Oracle Database connectivity
 store = ADB(
@@ -189,7 +190,8 @@ When `datastores=...` is provided, the agent gets:
 
 ```python
 from langchain_oci import OCIGenAIEmbeddings
-from langchain_oci.agents import ADB, create_deep_research_agent
+from langchain_oci import create_deep_research_agent
+from langchain_oci.datastores import ADB
 
 embedding_model = OCIGenAIEmbeddings(
     model_id="cohere.embed-v4.0",

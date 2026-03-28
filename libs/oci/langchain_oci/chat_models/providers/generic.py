@@ -658,29 +658,6 @@ class GenericProvider(Provider):
         as_json_schema_function = convert_to_openai_function(tool)
         return as_json_schema_function.get("parameters", {})
 
-    @staticmethod
-    def _overlay_schema_extras(
-        schema: Dict[str, Any],
-        args_schema: Union[type, Dict[str, Any]],
-    ) -> None:
-        """Overlay json_schema_extra from args_schema fields onto a schema.
-
-        tool_call_schema.model_json_schema() drops json_schema_extra (enum,
-        format, pattern, etc.). This restores those constraints from the
-        original args_schema field definitions for fields present in both.
-        """
-        properties = schema.get("properties", {})
-        if not properties:
-            return
-        fields = getattr(args_schema, "model_fields", {})
-        for field_name, prop in properties.items():
-            field_info = fields.get(field_name)
-            if field_info is None:
-                continue
-            extras = getattr(field_info, "json_schema_extra", None)
-            if extras and isinstance(extras, dict):
-                prop.update(extras)
-
     def convert_to_oci_tool(
         self,
         tool: Union[Dict[str, Any], Type[BaseModel], Callable, BaseTool],

@@ -4,8 +4,8 @@
 """OCI ReAct Agent - simple wrapper around LangGraph's ReAct pattern.
 
 Example:
-    >>> from langchain_oci.agents import create_oci_agent, create_datastore_tools
-    >>> from langchain_oci.agents import OpenSearch
+    >>> from langchain_oci.agents import create_oci_agent
+    >>> from langchain_oci.datastores import OpenSearch, create_datastore_tools
     >>>
     >>> # With custom tools
     >>> agent = create_oci_agent(

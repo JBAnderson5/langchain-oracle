@@ -7,15 +7,9 @@ Agents:
     - create_oci_agent: Simple ReAct agent wrapper around LangGraph
     - create_deep_research_agent: Deep research agent with deepagents (optional)
 
-Datastores (shared by all agents):
-    - VectorDataStore: Abstract base class
-    - OpenSearch: OpenSearch backend
-    - ADB: Oracle Autonomous Database backend
-    - create_datastore_tools: Create search tools for datastores
-
 Example - Simple agent with datastore tools:
-    >>> from langchain_oci.agents import (
-    ...     create_oci_agent,
+    >>> from langchain_oci.agents import create_oci_agent
+    >>> from langchain_oci.datastores import (
     ...     OpenSearch,
     ...     create_datastore_tools,
     ... )
@@ -32,17 +26,12 @@ Example - Simple agent with datastore tools:
 
 from typing import TYPE_CHECKING, Any
 
-# Always available - datastores and tools
-from langchain_oci.agents.datastores import (
-    ADB,
-    OpenSearch,
-    VectorDataStore,
-    create_datastore_tools,
-)
+from langchain_oci.agents.common import AgentConfig
 from langchain_oci.agents.react.agent import create_oci_agent
 
 if TYPE_CHECKING:
     from langchain_oci.agents.deep_research import create_deep_research_agent
+    from langchain_oci.agents.deep_research.agent import DeepResearchConfig
 
 
 def __getattr__(name: str) -> Any:
@@ -51,17 +40,16 @@ def __getattr__(name: str) -> Any:
         from langchain_oci.agents.deep_research import create_deep_research_agent
 
         return create_deep_research_agent
+    if name == "DeepResearchConfig":
+        from langchain_oci.agents.deep_research.agent import DeepResearchConfig
+
+        return DeepResearchConfig
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 __all__ = [
-    # Simple ReAct agent
+    "AgentConfig",
     "create_oci_agent",
-    # Deep research agent (optional - requires deepagents)
     "create_deep_research_agent",
-    # Datastores (shared)
-    "VectorDataStore",
-    "OpenSearch",
-    "ADB",
-    "create_datastore_tools",
+    "DeepResearchConfig",
 ]

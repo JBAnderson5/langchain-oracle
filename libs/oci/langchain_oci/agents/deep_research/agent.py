@@ -17,75 +17,75 @@ from typing import (
 )
 
 from langchain_core.tools import BaseTool
+from pydantic import Field
 
-from langchain_oci.agents.common import OCIConfig, filter_none, merge_model_kwargs
-from langchain_oci.agents.datastores import VectorDataStore, create_datastore_tools
-from langchain_oci.chat_models.oci_generative_ai import ChatOCIGenAI
+from langchain_oci.agents.common import (
+    AgentConfig,
+    _build_llm,
+    _filter_none,
+    _get_agent_factory,
+)
 from langchain_oci.common.auth import OCIAuthType
+from langchain_oci.datastores import VectorDataStore, create_datastore_tools
 
 if TYPE_CHECKING:
     from langgraph.graph.state import CompiledStateGraph
 
-create_agent: Any = None
-try:
-    import langchain.agents as _langchain_agents
-except (ImportError, AttributeError):
-    pass
-else:
-    create_agent = getattr(_langchain_agents, "create_agent", None)
 
-create_react_agent: Any = None
-try:
-    import langgraph.prebuilt as _langgraph_prebuilt
-except ImportError:
-    pass
-else:
-    create_react_agent = getattr(_langgraph_prebuilt, "create_react_agent", None)
+class DeepResearchConfig(AgentConfig):
+    """Configuration for the Deep Research agent.
 
+    Extends AgentConfig with datastore routing and deepagents options.
+    Use Pydantic ``Field(alias=...)`` for alternative field names.
+    """
 
-def _get_lightweight_agent_factory() -> tuple[Callable[..., Any], bool]:
-    """Get the lightweight agent factory across supported langchain versions."""
-    if callable(create_agent):
-        return create_agent, False
+    model_id: str = "google.gemini-2.5-pro"
 
-    if callable(create_react_agent):
-        return create_react_agent, True
+    # Datastores (typed as Any to avoid Pydantic strict validation on ABC)
+    datastores: Optional[Dict[str, Any]] = None
+    default_datastore: Optional[str] = Field(default=None, alias="default_store")
+    embedding_model: Optional[Any] = None
+    top_k: int = 5
 
-    raise ImportError(
-        "Could not import lightweight agent factory. "
-        "Please install langchain>=1.0.0 or langgraph."
-    )
+    # Deep agent options
+    subagents: Optional[List[Any]] = None
+    skills: Optional[List[str]] = None
+    memory: Optional[List[str]] = None
+    middleware: Optional[Sequence[Any]] = None
+    response_format: Optional[Any] = None
+    context_schema: Optional[type] = None
 
+    # LangGraph options
+    backend: Optional[Any] = None
+    cache: Optional[Any] = None
+    interrupt_on: Optional[Dict[str, Any]] = None
 
-def _should_use_lightweight_agent(
-    *,
-    middleware: Optional[Sequence[Any]],
-    datastores: Optional[Dict[str, VectorDataStore]],
-    subagents: Optional[List[Any]],
-    skills: Optional[List[str]],
-    memory: Optional[List[str]],
-    backend: Any = None,
-    cache: Any = None,
-    interrupt_on: Optional[Dict[str, Any]] = None,
-    response_format: Any = None,
-    context_schema: Optional[type] = None,
-) -> bool:
-    # Deep agent features require create_deep_agent
-    if subagents or skills or memory:
+    # Tools
+    tools: Optional[Sequence[Union[BaseTool, Callable[..., Any]]]] = None
+
+    @property
+    def _needs_deep_agent(self) -> bool:
+        """Whether this config requires the full deep agent path."""
+        if self.subagents or self.skills or self.memory:
+            return True
+        if self.backend or self.cache or self.interrupt_on:
+            return True
+        if self.response_format or self.context_schema:
+            return True
         return False
-    if backend or cache or interrupt_on or response_format or context_schema:
-        return False
-    if datastores:
-        return True
-    return middleware is not None and len(middleware) == 0
+
+    @property
+    def _can_use_lightweight(self) -> bool:
+        """Whether a lightweight ReAct agent suffices."""
+        if self._needs_deep_agent:
+            return False
+        if self.datastores:
+            return True
+        return self.middleware is not None and len(self.middleware) == 0
 
 
 def _check_deep_research_prerequisites() -> None:
-    """Validate runtime prerequisites for deep research.
-
-    Raises clear errors when the environment cannot support deep agents,
-    rather than letting users hit cryptic schema conversion or hash errors.
-    """
+    """Validate runtime prerequisites for deep research."""
     import sys
 
     min_version = (3, 11)
@@ -111,13 +111,13 @@ def _check_deep_research_prerequisites() -> None:
 def create_deep_research_agent(
     tools: Optional[Sequence[Union[BaseTool, Callable[..., Any]]]] = None,
     *,
-    # Datastores - if provided, auto-routing search is enabled
+    # Datastores
     datastores: Optional[Dict[str, VectorDataStore]] = None,
     default_datastore: Optional[str] = None,
-    default_store: Optional[str] = None,  # Alias for default_datastore
+    default_store: Optional[str] = None,
     embedding_model: Any = None,
     top_k: int = 5,
-    # OCI-specific options
+    # OCI options
     model_id: str = "google.gemini-2.5-pro",
     compartment_id: Optional[str] = None,
     service_endpoint: Optional[str] = None,
@@ -145,7 +145,7 @@ def create_deep_research_agent(
     # Model kwargs
     temperature: Optional[float] = None,
     max_tokens: Optional[int] = None,
-    max_input_tokens: Optional[int] = None,  # noqa: ARG001 - Intentionally ignored
+    max_input_tokens: Optional[int] = None,  # noqa: ARG001
     **model_kwargs: Any,
 ) -> "CompiledStateGraph":
     """Create a Deep Research Agent using OCI GenAI and deepagents.
@@ -178,14 +178,10 @@ def create_deep_research_agent(
         checkpointer: LangGraph checkpointer for persistence/memory.
         store: LangGraph store for long-term memory.
         backend: State backend for the deep agent (e.g., StoreBackend).
-            When provided, the agent uses this backend instead of the default
-            ephemeral StateBackend, enabling persistent skills and memory.
         cache: LangGraph cache for caching LLM calls.
         interrupt_before: Node names to interrupt before (lightweight path).
         interrupt_after: Node names to interrupt after (lightweight path).
-        interrupt_on: Mapping of tool names to interrupt configs for
-            human-in-the-loop approval (e.g., ``{"edit_file": True}``).
-            Used by the deep agent path via HumanInTheLoopMiddleware.
+        interrupt_on: Mapping of tool names to interrupt configs.
         debug: Enable debug mode.
         name: Name for the agent.
         temperature: Model temperature.
@@ -197,7 +193,7 @@ def create_deep_research_agent(
         CompiledStateGraph: A compiled deep research agent.
 
     Example:
-        >>> from langchain_oci.agents.deep_research import OpenSearch, ADB
+        >>> from langchain_oci.datastores import OpenSearch, ADB
         >>>
         >>> agent = create_deep_research_agent(
         ...     datastores={
@@ -218,118 +214,143 @@ def create_deep_research_agent(
     """
     _check_deep_research_prerequisites()
 
-    # Resolve OCI configuration
-    oci_config = OCIConfig.resolve(
+    config = DeepResearchConfig(
+        model_id=model_id,
         compartment_id=compartment_id,
         service_endpoint=service_endpoint,
         auth_type=auth_type,
         auth_profile=auth_profile,
         auth_file_location=auth_file_location,
-    )
-
-    # Build tools list
-    all_tools: list[BaseTool | Callable[..., Any]] = []
-
-    if datastores:
-        datastore_tools = create_datastore_tools(
-            stores=datastores,
-            default_store=default_store or default_datastore,
-            embedding_model=embedding_model,
-            compartment_id=oci_config.compartment_id,
-            service_endpoint=oci_config.service_endpoint,
-            auth_type=oci_config.auth_type,
-            auth_profile=oci_config.auth_profile,
-            top_k=top_k,
-        )
-        all_tools.extend(datastore_tools)
-
-    if tools:
-        all_tools.extend(tools)
-
-    # Create OCI chat model
-    llm = ChatOCIGenAI(
-        model_id=model_id,
-        compartment_id=oci_config.compartment_id,
-        service_endpoint=oci_config.service_endpoint,
-        auth_type=oci_config.auth_type,
-        auth_profile=oci_config.auth_profile,
-        auth_file_location=oci_config.auth_file_location,
-        model_kwargs=merge_model_kwargs(
-            model_kwargs,
-            temperature,
-            max_tokens,
-            model_id=model_id,
-        ),
-    )
-
-    if _should_use_lightweight_agent(
-        middleware=middleware,
+        system_prompt=system_prompt,
+        checkpointer=checkpointer,
+        store=store,
+        interrupt_before=interrupt_before,
+        interrupt_after=interrupt_after,
+        debug=debug,
+        name=name,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        model_kwargs=model_kwargs,
+        # Deep research specific
         datastores=datastores,
+        default_datastore=default_store or default_datastore,
+        embedding_model=embedding_model,
+        top_k=top_k,
+        tools=tools,
         subagents=subagents,
         skills=skills,
         memory=memory,
+        middleware=middleware,
+        response_format=response_format,
+        context_schema=context_schema,
         backend=backend,
         cache=cache,
         interrupt_on=interrupt_on,
-        response_format=response_format,
-        context_schema=context_schema,
-    ):
-        create_agent_func, use_legacy_api = _get_lightweight_agent_factory()
-        prompt_key = "prompt" if use_legacy_api else "system_prompt"
-        agent_kwargs = {
-            "model": llm,
-            "tools": all_tools,
-            **filter_none(
-                middleware=None if use_legacy_api else tuple(middleware or ()),
-                checkpointer=checkpointer,
-                store=store,
-                interrupt_before=interrupt_before,
-                interrupt_after=interrupt_after,
-                name=name,
-                **{prompt_key: system_prompt},
-            ),
-            "debug": debug,
-        }
-        compiled = create_agent_func(
-            **{key: value for key, value in agent_kwargs.items() if value is not None}
+    )
+
+    return _create_from_config(config)
+
+
+def _create_from_config(config: DeepResearchConfig) -> "CompiledStateGraph":
+    """Build a deep research agent from a validated config."""
+    # Build tools list
+    all_tools: list[BaseTool | Callable[..., Any]] = []
+
+    auth_type = (
+        config.auth_type.name
+        if isinstance(config.auth_type, OCIAuthType)
+        else config.auth_type
+    )
+
+    if config.datastores:
+        datastore_tools = create_datastore_tools(
+            stores=config.datastores,
+            default_store=config.default_datastore,
+            embedding_model=config.embedding_model,
+            compartment_id=config.compartment_id or "",
+            service_endpoint=config.service_endpoint or "",
+            auth_type=auth_type,
+            auth_profile=config.auth_profile,
+            top_k=config.top_k,
         )
+        all_tools.extend(datastore_tools)
+
+    if config.tools:
+        all_tools.extend(config.tools)
+
+    llm = _build_llm(config)
+
+    if config._can_use_lightweight:
+        compiled = _build_lightweight(config, llm, all_tools)
     else:
-        try:
-            from deepagents import create_deep_agent
-        except ImportError as ex:
-            raise ImportError(
-                "deepagents required. Install with: pip install deepagents"
-            ) from ex
+        compiled = _build_deep(config, llm, all_tools)
 
-        # Build agent kwargs - only include non-None values
-        agent_kwargs = {
-            "model": llm,
-            "tools": all_tools,
-            **filter_none(
-                system_prompt=system_prompt,
-                subagents=subagents,
-                skills=skills,
-                memory=memory,
-                middleware=middleware,
-                response_format=response_format,
-                context_schema=context_schema,
-                checkpointer=checkpointer,
-                store=store,
-                backend=backend,
-                cache=cache,
-                interrupt_on=interrupt_on,
-                name=name,
-            ),
-        }
-
-        # debug=False is meaningful, so handle separately
-        if debug:
-            agent_kwargs["debug"] = True
-
-        compiled = create_deep_agent(**agent_kwargs)
-
-    # Expose the underlying OCI chat model for explicit cleanup in long-lived
-    # processes (and in our integration tests). This avoids aiohttp
-    # "Unclosed client session" warnings when async pooling is used.
+    # Expose the underlying OCI chat model for cleanup
     setattr(compiled, "_oci_llm", llm)
     return compiled
+
+
+def _build_lightweight(
+    config: DeepResearchConfig,
+    llm: Any,
+    tools: list[Any],
+) -> Any:
+    """Build a lightweight ReAct agent."""
+    create_agent_func, use_legacy_api = _get_agent_factory()
+    prompt_key = "prompt" if use_legacy_api else "system_prompt"
+    agent_kwargs = {
+        "model": llm,
+        "tools": tools,
+        **_filter_none(
+            middleware=None if use_legacy_api else tuple(config.middleware or ()),
+            checkpointer=config.checkpointer,
+            store=config.store,
+            interrupt_before=config.interrupt_before,
+            interrupt_after=config.interrupt_after,
+            name=config.name,
+            **{prompt_key: config.system_prompt},
+        ),
+        "debug": config.debug,
+    }
+    return create_agent_func(
+        **{key: value for key, value in agent_kwargs.items() if value is not None}
+    )
+
+
+def _build_deep(
+    config: DeepResearchConfig,
+    llm: Any,
+    tools: list[Any],
+) -> Any:
+    """Build a full deep agent."""
+    try:
+        from deepagents import create_deep_agent
+    except ImportError as ex:
+        raise ImportError(
+            "deepagents required. Install with: pip install deepagents"
+        ) from ex
+
+    agent_kwargs = {
+        "model": llm,
+        "tools": tools,
+        **_filter_none(
+            system_prompt=config.system_prompt,
+            subagents=config.subagents,
+            skills=config.skills,
+            memory=config.memory,
+            middleware=config.middleware,
+            response_format=config.response_format,
+            context_schema=config.context_schema,
+            checkpointer=config.checkpointer,
+            store=config.store,
+            backend=config.backend,
+            cache=config.cache,
+            interrupt_on=config.interrupt_on,
+            name=config.name,
+        ),
+    }
+
+    if config.debug:
+        agent_kwargs["debug"] = True
+
+    return create_deep_agent(**agent_kwargs)

@@ -15,7 +15,7 @@ class TestVectorDataStore:
 
     def test_is_abstract(self) -> None:
         """Test that VectorDataStore cannot be instantiated directly."""
-        from langchain_oci.agents.datastores.vectorstores import VectorDataStore
+        from langchain_oci.datastores.vectorstores import VectorDataStore
 
         with pytest.raises(TypeError, match="abstract"):
             VectorDataStore()  # type: ignore[abstract]
@@ -24,7 +24,7 @@ class TestVectorDataStore:
         """Test that VectorDataStore defines required abstract properties/methods."""
         import inspect
 
-        from langchain_oci.agents.datastores.vectorstores import VectorDataStore
+        from langchain_oci.datastores.vectorstores import VectorDataStore
 
         abstract_methods = {
             name
@@ -47,7 +47,7 @@ class TestVectorDataStore:
 
     def test_datastore_description_property_has_default(self) -> None:
         """Test that datastore_description property returns empty string by default."""
-        from langchain_oci.agents.datastores.vectorstores import VectorDataStore
+        from langchain_oci.datastores.vectorstores import VectorDataStore
 
         # Create a concrete implementation for testing
         class ConcreteStore(VectorDataStore):
@@ -87,7 +87,7 @@ class TestVectorDataStore:
         """Test semantic search delegates to the configured LangChain vector store."""
         from langchain_core.documents import Document
 
-        from langchain_oci.agents.datastores.vectorstores import VectorDataStore
+        from langchain_oci.datastores.vectorstores import VectorDataStore
 
         vectorstore = MagicMock()
         vectorstore.similarity_search_with_score.return_value = [
@@ -137,7 +137,7 @@ class TestOpenSearchDataStore:
 
     def test_initialization(self) -> None:
         """Test OpenSearch datastore can be initialized."""
-        from langchain_oci.agents.datastores.vectorstores import OpenSearch
+        from langchain_oci.datastores.vectorstores import OpenSearch
 
         store = OpenSearch(
             endpoint="https://localhost:9200",
@@ -155,7 +155,7 @@ class TestOpenSearchDataStore:
 
     def test_connect_requires_opensearchpy(self) -> None:
         """Test that connect raises ImportError if opensearch-py not installed."""
-        from langchain_oci.agents.datastores.vectorstores import OpenSearch
+        from langchain_oci.datastores.vectorstores import OpenSearch
 
         store = OpenSearch(
             endpoint="https://localhost:9200",
@@ -168,7 +168,7 @@ class TestOpenSearchDataStore:
 
     def test_default_values(self) -> None:
         """Test OpenSearch has sensible defaults."""
-        from langchain_oci.agents.datastores.vectorstores import OpenSearch
+        from langchain_oci.datastores.vectorstores import OpenSearch
 
         store = OpenSearch(
             endpoint="https://localhost:9200",
@@ -182,8 +182,8 @@ class TestOpenSearchDataStore:
 
     def test_search_documents_normalizes_text_and_metadata_fields(self) -> None:
         """Search results should use text/metadata-backed OpenSearch documents."""
-        from langchain_oci.agents.datastores.vectorstores import OpenSearch
-        from langchain_oci.agents.datastores.vectorstores.opensearch import (
+        from langchain_oci.datastores.vectorstores import OpenSearch
+        from langchain_oci.datastores.vectorstores.opensearch import (
             _OpenSearchVectorStore,
         )
 
@@ -239,7 +239,7 @@ class TestOpenSearchDataStore:
 
     def test_get_normalizes_nested_metadata_content(self) -> None:
         """Document fetch should not expose raw metadata blobs as content."""
-        from langchain_oci.agents.datastores.vectorstores import OpenSearch
+        from langchain_oci.datastores.vectorstores import OpenSearch
 
         store = OpenSearch(
             endpoint="https://localhost:9200",
@@ -280,7 +280,7 @@ class TestADBDataStore:
 
     def test_initialization(self) -> None:
         """Test ADB datastore can be initialized."""
-        from langchain_oci.agents.datastores.vectorstores import ADB
+        from langchain_oci.datastores.vectorstores import ADB
 
         store = ADB(
             dsn="mydb_low",
@@ -299,7 +299,7 @@ class TestADBDataStore:
 
     def test_connect_requires_oracledb(self) -> None:
         """Test that connect raises ImportError if oracledb not installed."""
-        from langchain_oci.agents.datastores.vectorstores import ADB
+        from langchain_oci.datastores.vectorstores import ADB
 
         store = ADB(
             dsn="mydb_low",
@@ -313,7 +313,7 @@ class TestADBDataStore:
 
     def test_default_values(self) -> None:
         """Test ADB has sensible defaults."""
-        from langchain_oci.agents.datastores.vectorstores import ADB
+        from langchain_oci.datastores.vectorstores import ADB
 
         store = ADB(
             dsn="mydb_low",
@@ -329,7 +329,7 @@ class TestADBDataStore:
         """Test ADB delegates semantic search to OracleVS."""
         from langchain_core.documents import Document
 
-        from langchain_oci.agents.datastores.vectorstores import ADB
+        from langchain_oci.datastores.vectorstores import ADB
 
         store = ADB(
             dsn="mydb_low",
@@ -357,10 +357,10 @@ class TestADBDataStore:
         assert results[0][0].metadata["source"] == "test_source"
         assert results[0][1] == 0.2
 
-    @patch("langchain_oci.agents.datastores.vectorstores.adb.uuid.uuid4")
+    @patch("langchain_oci.datastores.vectorstores.adb.uuid.uuid4")
     def test_insert_delegates_to_oraclevs_backend(self, mock_uuid) -> None:
         """Test ADB insert delegates to OracleVS add_documents in chunk mode."""
-        from langchain_oci.agents.datastores.vectorstores import ADB
+        from langchain_oci.datastores.vectorstores import ADB
 
         mock_uuid.return_value = "doc-123"
         store = ADB(dsn="mydb_low", user="ADMIN", password="password")
@@ -388,7 +388,7 @@ class TestADBDataStore:
 
     def test_bulk_insert_delegates_to_oraclevs_backend(self) -> None:
         """Test ADB bulk insert delegates to OracleVS add_documents in chunk mode."""
-        from langchain_oci.agents.datastores.vectorstores import ADB
+        from langchain_oci.datastores.vectorstores import ADB
 
         store = ADB(dsn="mydb_low", user="ADMIN", password="password")
         store._oraclevs = MagicMock()
@@ -418,7 +418,7 @@ class TestStoreSelector:
 
     def test_single_store_routing(self) -> None:
         """Test that single store always routes to itself."""
-        from langchain_oci.agents.datastores.tools import StoreSelector
+        from langchain_oci.datastores.tools import StoreSelector
 
         mock_embedding = MagicMock()
         mock_embedding.embed_query.return_value = [0.1] * 1024
@@ -436,7 +436,7 @@ class TestStoreSelector:
 
     def test_multi_store_routing(self) -> None:
         """Test routing between multiple stores."""
-        from langchain_oci.agents.datastores.tools import StoreSelector
+        from langchain_oci.datastores.tools import StoreSelector
 
         mock_embedding = MagicMock()
         # Return different embeddings for different queries
@@ -467,14 +467,14 @@ class TestCreateDatastoreTools:
 
     def test_raises_without_stores(self) -> None:
         """Test that empty stores raises ValueError."""
-        from langchain_oci.agents.datastores.tools import create_datastore_tools
+        from langchain_oci.datastores.tools import create_datastore_tools
 
         with pytest.raises(ValueError, match="At least one datastore"):
             create_datastore_tools(stores={})
 
     def test_raises_invalid_default_store(self) -> None:
         """Test that invalid default_store raises ValueError."""
-        from langchain_oci.agents.datastores.tools import create_datastore_tools
+        from langchain_oci.datastores.tools import create_datastore_tools
 
         mock_store = MagicMock()
         mock_store.datastore_description = "test"
@@ -489,7 +489,7 @@ class TestCreateDatastoreTools:
 
     def test_requires_compartment_id_for_default_embeddings(self) -> None:
         """Test that compartment_id is required when using default embeddings."""
-        from langchain_oci.agents.datastores.tools import create_datastore_tools
+        from langchain_oci.datastores.tools import create_datastore_tools
 
         mock_store = MagicMock()
         mock_store.datastore_description = "test"
@@ -502,7 +502,7 @@ class TestCreateDatastoreTools:
 
     def test_creates_four_tools(self) -> None:
         """Test that factory creates all four datastore tools."""
-        from langchain_oci.agents.datastores.tools import create_datastore_tools
+        from langchain_oci.datastores.tools import create_datastore_tools
 
         mock_store = MagicMock()
         mock_store.datastore_description = "test"
@@ -523,7 +523,7 @@ class TestCreateDatastoreTools:
 
     def test_tools_have_descriptions(self) -> None:
         """Test that all tools have descriptions."""
-        from langchain_oci.agents.datastores.tools import create_datastore_tools
+        from langchain_oci.datastores.tools import create_datastore_tools
 
         mock_store = MagicMock()
         mock_store.datastore_description = "test documents"
@@ -543,7 +543,7 @@ class TestCreateDatastoreTools:
 
     def test_accepts_custom_top_k(self) -> None:
         """Test that custom top_k is passed to search tools."""
-        from langchain_oci.agents.datastores.tools import create_datastore_tools
+        from langchain_oci.datastores.tools import create_datastore_tools
 
         mock_store = MagicMock()
         mock_store.datastore_description = "test"
@@ -564,7 +564,7 @@ class TestCreateDatastoreTools:
 
     def test_search_tool_logs_backend_error(self, caplog) -> None:
         """Test search tool logs backend exceptions with query context."""
-        from langchain_oci.agents.datastores.tools.search import SearchTool
+        from langchain_oci.datastores.tools.search import SearchTool
 
         selector = MagicMock()
         selector.route.return_value = "research"
@@ -589,7 +589,7 @@ class TestCreateDatastoreTools:
 
     def test_keyword_search_tool_logs_backend_error(self, caplog) -> None:
         """Test keyword search tool logs backend exceptions with query context."""
-        from langchain_oci.agents.datastores.tools.keyword_search import (
+        from langchain_oci.datastores.tools.keyword_search import (
             KeywordSearchTool,
         )
 
@@ -619,23 +619,9 @@ class TestCreateDatastoreTools:
 class TestDatastoreImports:
     """Tests for datastore imports from various paths."""
 
-    def test_import_from_agents(self) -> None:
-        """Test imports from langchain_oci.agents."""
-        from langchain_oci.agents import (
-            ADB,
-            OpenSearch,
-            VectorDataStore,
-            create_datastore_tools,
-        )
-
-        assert VectorDataStore is not None
-        assert OpenSearch is not None
-        assert ADB is not None
-        assert create_datastore_tools is not None
-
     def test_import_from_datastores(self) -> None:
-        """Test imports from langchain_oci.agents.datastores."""
-        from langchain_oci.agents.datastores import (
+        """Test imports from langchain_oci.datastores."""
+        from langchain_oci.datastores import (
             ADB,
             OpenSearch,
             VectorDataStore,
@@ -648,8 +634,8 @@ class TestDatastoreImports:
         assert create_datastore_tools is not None
 
     def test_import_from_vectorstores(self) -> None:
-        """Test imports from langchain_oci.agents.datastores.vectorstores."""
-        from langchain_oci.agents.datastores.vectorstores import (
+        """Test imports from langchain_oci.datastores.vectorstores."""
+        from langchain_oci.datastores.vectorstores import (
             ADB,
             OpenSearch,
             VectorDataStore,

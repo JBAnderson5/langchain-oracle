@@ -14,7 +14,7 @@ from langchain_core.retrievers import BaseRetriever
 from langchain_core.vectorstores import VectorStore
 from pydantic import ConfigDict
 
-from langchain_oci.agents.datastores.vectorstores.base import VectorDataStore
+from langchain_oci.datastores.vectorstores.base import VectorDataStore
 
 
 def _coerce_text(value: Any) -> str:
@@ -279,7 +279,7 @@ class OpenSearch(VectorDataStore):
     """OpenSearch vector datastore.
 
     Example:
-        >>> from langchain_oci.agents import OpenSearch, create_datastore_tools
+        >>> from langchain_oci.datastores import OpenSearch, create_datastore_tools
         >>>
         >>> store = OpenSearch(
         ...     endpoint="https://opensearch.example.com:9200",

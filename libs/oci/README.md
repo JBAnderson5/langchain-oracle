@@ -455,7 +455,8 @@ Example:
 ```python
 from langchain_core.messages import HumanMessage
 from langchain_oci import OCIGenAIEmbeddings
-from langchain_oci.agents import ADB, create_deep_research_agent
+from langchain_oci import create_deep_research_agent
+from langchain_oci.datastores import ADB
 
 # ADB datastore requires langchain-oracledb
 store = ADB(

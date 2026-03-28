@@ -8,7 +8,7 @@ import pytest
 def test_compile_imports() -> None:
     """CI compile check: imports should succeed without running real integrations."""
     from langchain_oci import OCIGenAIEmbeddings, create_deep_research_agent
-    from langchain_oci.agents.datastores.vectorstores import ADB, OpenSearch
+    from langchain_oci.datastores.vectorstores import ADB, OpenSearch
 
     assert OCIGenAIEmbeddings is not None
     assert create_deep_research_agent is not None

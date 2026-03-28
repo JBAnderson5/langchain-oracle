@@ -8,7 +8,7 @@ from vector datastores (OpenSearch, Oracle ADB). Tools automatically route
 queries to the best datastore based on semantic similarity.
 
 Example:
-    >>> from langchain_oci.agents import OpenSearch, create_datastore_tools
+    >>> from langchain_oci.datastores import OpenSearch, create_datastore_tools
     >>> tools = create_datastore_tools(
     ...     stores={
     ...         "docs": OpenSearch(
@@ -20,7 +20,7 @@ Example:
 """
 
 # Base classes and types
-from langchain_oci.agents.datastores.tools.base import (
+from langchain_oci.datastores.tools.base import (
     DatastoreTool,
     ResultFormatter,
     SearchResult,
@@ -28,23 +28,23 @@ from langchain_oci.agents.datastores.tools.base import (
 )
 
 # Factory function
-from langchain_oci.agents.datastores.tools.factory import create_datastore_tools
+from langchain_oci.datastores.tools.factory import create_datastore_tools
 
 # Tool implementations
-from langchain_oci.agents.datastores.tools.get_document import GetDocumentTool
-from langchain_oci.agents.datastores.tools.keyword_search import KeywordSearchTool
+from langchain_oci.datastores.tools.get_document import GetDocumentTool
+from langchain_oci.datastores.tools.keyword_search import KeywordSearchTool
 
 # Input schemas
-from langchain_oci.agents.datastores.tools.schemas import (
+from langchain_oci.datastores.tools.schemas import (
     GetDocumentInput,
     SearchInput,
     StatsInput,
 )
-from langchain_oci.agents.datastores.tools.search import SearchTool
+from langchain_oci.datastores.tools.search import SearchTool
 
 # Selector
-from langchain_oci.agents.datastores.tools.selector import StoreSelector
-from langchain_oci.agents.datastores.tools.stats import StatsTool
+from langchain_oci.datastores.tools.selector import StoreSelector
+from langchain_oci.datastores.tools.stats import StatsTool
 
 __all__ = [
     # Base classes and types
